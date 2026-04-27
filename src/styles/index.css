@@ -1,0 +1,29 @@
+@import './tokens.css';
+@import './layout.css';
+@import './components.css';
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-app-bg);
+  color: var(--text-primary);
+  font-family: Inter, Arial, Helvetica, sans-serif;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}

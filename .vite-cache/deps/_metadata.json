@@ -1,0 +1,52 @@
+{
+  "hash": "2f90d14f",
+  "configHash": "679fbe47",
+  "lockfileHash": "e3b0c442",
+  "browserHash": "922cf7d9",
+  "optimized": {
+    "lucide-react": {
+      "src": "../../../../../../aiden-deng/inox-smart-ui-demo/node_modules/lucide-react/dist/esm/lucide-react.js",
+      "file": "lucide-react.js",
+      "fileHash": "b90583ac",
+      "needsInterop": false
+    },
+    "react": {
+      "src": "../../../../../../aiden-deng/inox-smart-ui-demo/node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "41a12812",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../../../../../aiden-deng/inox-smart-ui-demo/node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "9a041278",
+      "needsInterop": true
+    },
+    "react-router-dom": {
+      "src": "../../../../../../aiden-deng/inox-smart-ui-demo/node_modules/react-router-dom/dist/index.js",
+      "file": "react-router-dom.js",
+      "fileHash": "936dd767",
+      "needsInterop": false
+    },
+    "zustand": {
+      "src": "../../../../../../aiden-deng/inox-smart-ui-demo/node_modules/zustand/esm/index.mjs",
+      "file": "zustand.js",
+      "fileHash": "18814457",
+      "needsInterop": false
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../../../../../aiden-deng/inox-smart-ui-demo/node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "047bc0f3",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "chunk-M6TBVS53": {
+      "file": "chunk-M6TBVS53.js"
+    },
+    "chunk-MKGNLP2Y": {
+      "file": "chunk-MKGNLP2Y.js"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+:root {
+  --color-brand: #8cc653;
+  --color-brand-dark: #79b63e;
+  --color-header: #050505;
+  --color-sidebar: #4d4d4d;
+  --color-sidebar-border: #767676;
+  --color-app-bg: #e9e9e9;
+  --color-surface: #ffffff;
+  --color-muted-surface: #f2f2f2;
+  --color-table-head: #c9c9c9;
+  --color-tab-dark: #505050;
+  --color-line: #dddddd;
+  --text-primary: #242424;
+  --text-secondary: #555555;
+  --text-muted: #969696;
+  --state-red: #ef3d35;
+  --topbar-height: 72px;
+  --demo-bar-height: 44px;
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 78px;
+  --content-pad: 44px;
+  --radius: 2px;
+  --shadow-modal: 0 18px 60px rgba(0, 0, 0, 0.28);
+}
+
+.theme-v2 {
+  --color-brand: #6aa8ff;
+  --color-brand-dark: #3a83ef;
+}
+
+.theme-v3 {
+  --color-brand: #18a999;
+  --color-brand-dark: #0d887a;
+}
