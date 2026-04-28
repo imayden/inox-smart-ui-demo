@@ -971,10 +971,14 @@
   background: #fff;
 }
 
-.login-language {
+.login-panel .language-menu {
   position: absolute;
   top: 34px;
   right: 52px;
+  color: #202020;
+}
+
+.login-panel .language-menu__trigger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -982,7 +986,6 @@
   height: 42px;
   border: 0;
   background: transparent;
-  color: #202020;
 }
 
 .login-form {
@@ -1152,7 +1155,7 @@
     padding: 28px 18px 44px;
   }
 
-  .login-language {
+  .login-panel .language-menu {
     top: 18px;
     right: 18px;
   }

@@ -1,3 +1,4 @@
+// Page schema layer: filters, table columns and tabs are configured here for easy extension.
 // 页面配置层：搜索表单、表格列、Tab 都走 schema，后续新增字段或版本差异时优先改配置。
 export const filterSchemas = {
   properties: [

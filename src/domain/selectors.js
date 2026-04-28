@@ -9,12 +9,14 @@ import {
   users,
 } from './mockData.js';
 
+// Selectors centralize the current property scope so pages only consume ready-to-render rows.
 // 数据选择器把“当前物业上下文”集中处理，页面组件只关心拿到什么 rows。
 export function getProperty(propertyId) {
   return properties.find((property) => property.id === propertyId) ?? properties[0];
 }
 
 export function getModuleRows(moduleId, propertyId, subTab = '') {
+  // Every business list is filtered by the selected sidebar property, matching the SaaS permission hierarchy.
   // 所有业务列表都先按侧边栏选中的 Property 过滤，符合 SaaS 的权限层级。
   switch (moduleId) {
     case 'properties':

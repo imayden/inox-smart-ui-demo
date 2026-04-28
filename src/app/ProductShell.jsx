@@ -13,7 +13,7 @@ export function ProductShell({ children }) {
   return (
     <div className={`theme-${uiVersion}`}>
       <DemoControlBar />
-      {/* 登录态只影响产品壳层：未登录时展示登录页，已登录时恢复当前 UI 版本的 SaaS 框架。 */}
+      {/* Auth state switches only the shell surface: logged out shows Login, logged in shows the active SaaS version. / 登录态只影响产品壳层：未登录时展示登录页，已登录时恢复当前 UI 版本的 SaaS 框架。 */}
       {authStatus === 'loggedOut' ? (
         <LoginPage />
       ) : (

@@ -3,13 +3,16 @@ import { Button, DataTable, FormGrid, Tabs } from '../components/ui.jsx';
 import { tableSchemas } from '../config/schemas.js';
 import { getEntity, getModuleRows } from '../domain/selectors.js';
 import { useDemoStore } from '../demo/demoStore.js';
+import { useI18n } from '../i18n/useI18n.js';
 
+// Detail router: entity type controls layout while the URL pattern stays consistent.
 // 详情页按实体类型分流：Property / Device / User 的信息层级不同，但共用路由形态。
 export function EntityDetailPage({ moduleId }) {
+  const { t } = useI18n();
   const { entityId } = useParams();
   const propertyId = useDemoStore((state) => state.propertyId);
   const entity = getEntity(moduleId, entityId);
-  if (!entity) return <div className="module-page"><h1>Not Found</h1></div>;
+  if (!entity) return <div className="module-page"><h1>{t('Not Found')}</h1></div>;
 
   if (moduleId === 'units') return <UnitDetail entity={entity} propertyId={propertyId} />;
   if (moduleId === 'devices') return <DeviceDetail entity={entity} propertyId={propertyId} />;
@@ -18,10 +21,11 @@ export function EntityDetailPage({ moduleId }) {
 }
 
 function PropertyDetail({ entity }) {
+  const { t } = useI18n();
   return (
     <section className="detail-page">
-      <div className="breadcrumb">◂ Property Details</div>
-      <Button className="detail-page__update">Update</Button>
+      <div className="breadcrumb">◂ {t('Property Details')}</div>
+      <Button className="detail-page__update">{t('Update')}</Button>
       <div className="detail-panel property-detail">
         <div>
           <FormGrid
@@ -46,9 +50,10 @@ function PropertyDetail({ entity }) {
 }
 
 function DeviceDetail({ entity }) {
+  const { t } = useI18n();
   return (
     <section className="detail-page">
-      <div className="breadcrumb">◂ Device Details</div>
+      <div className="breadcrumb">◂ {t('Device Details')}</div>
       <header className="detail-hero">
         <h1>{entity.name}</h1>
         <span>{entity.unitNumber}</span>
@@ -57,7 +62,7 @@ function DeviceDetail({ entity }) {
       <div className="settings-grid">
         {['Device Type', 'Device ID', 'MAC Address', 'Lock Installation Date & Time', 'Unit Owner', 'Lock Activated By', 'MCU Module Version', 'Bluetooth Module Version'].map((label, index) => (
           <label className="field" key={label}>
-            <span>{label}</span>
+            <span>{t(label)}</span>
             <input value={index === 0 ? entity.category : index === 1 ? entity.id : index === 3 ? entity.installedAt : index > 5 ? '1.1.4' : 'inoxsmartadmin@unisonhardware.com'} readOnly />
           </label>
         ))}
@@ -65,8 +70,8 @@ function DeviceDetail({ entity }) {
       <div className="settings-cards">
         {['Audio and Light Settings', 'Auto-Lock Settings', 'Passage Mode (One-Time)', 'Privacy Mode (One-Time)', 'Passage Mode Recurring Schedule', 'Privacy Mode Recurring Schedule', 'Door Position Sensor (DPS) Settings'].map((title) => (
           <article key={title}>
-            <h3>{title}</h3>
-            <p>When enabled, device behavior is applied to the selected unit and access users.</p>
+            <h3>{t(title)}</h3>
+            <p>{t('When enabled, device behavior is applied to the selected unit and access users.')}</p>
             <span className="switch" />
           </article>
         ))}
@@ -76,6 +81,7 @@ function DeviceDetail({ entity }) {
 }
 
 function UnitDetail({ entity, propertyId }) {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const uiVersion = useDemoStore((state) => state.uiVersion);
   const rows = getModuleRows('users', propertyId).slice(0, 8).map((user, index) => ({
@@ -87,19 +93,20 @@ function UnitDetail({ entity, propertyId }) {
     status: 'Moved-In',
   }));
 
+  // Unit Detail is one real entry point for Move-In, matching the production workflow.
   // Unit Detail 是 Move-In 的真实入口之一，按钮直接进入批量 Move-In 页面。
   return (
     <section className="detail-page">
-      <div className="breadcrumb">◂ Unit Details</div>
+      <div className="breadcrumb">◂ {t('Unit Details')}</div>
       <header className="detail-hero unit-detail-hero">
         <div>
           <h1>{entity.name}</h1>
           <span>{entity.floor} | {entity.building} {entity.tag} - 1.INOXHQ - Sacramento - California</span>
         </div>
         <div className="detail-hero__actions">
-          <Button>+ Add User</Button>
-          <Button onClick={() => navigate(`/demo/${uiVersion}/property/${propertyId}/occupancy/move-in`)}>Move-In</Button>
-          <Button variant="muted">Action</Button>
+          <Button>{t('+ Add User')}</Button>
+          <Button onClick={() => navigate(`/demo/${uiVersion}/property/${propertyId}/occupancy/move-in`)}>{t('Move-In')}</Button>
+          <Button variant="muted">{t('Action')}</Button>
         </div>
         <img src={entity.photo} alt={entity.name} />
       </header>
@@ -109,14 +116,14 @@ function UnitDetail({ entity, propertyId }) {
           <thead>
             <tr>
               <th className="checkbox-cell"><input type="checkbox" /></th>
-              <th>User Name</th>
-              <th>User Email Address</th>
-              <th>Role</th>
-              <th>Main Resident</th>
-              <th>Start Time</th>
-              <th>End Time</th>
-              <th>Status</th>
-              <th>Action</th>
+              <th>{t('User Name')}</th>
+              <th>{t('User Email Address')}</th>
+              <th>{t('Role')}</th>
+              <th>{t('Main Resident')}</th>
+              <th>{t('Start Time')}</th>
+              <th>{t('End Time')}</th>
+              <th>{t('Status')}</th>
+              <th>{t('Action')}</th>
             </tr>
           </thead>
           <tbody>
@@ -125,11 +132,11 @@ function UnitDetail({ entity, propertyId }) {
                 <td className="checkbox-cell"><input type="checkbox" /></td>
                 <td>{row.name}</td>
                 <td>{row.email}</td>
-                <td>{row.role}</td>
+                <td>{t(row.role)}</td>
                 <td><span className={`status-box ${row.mainResident ? 'is-on' : ''}`} /></td>
                 <td>{row.startTime}</td>
                 <td>{row.endTime}</td>
-                <td>{row.status}</td>
+                <td>{t(row.status)}</td>
                 <td>-</td>
               </tr>
             ))}
@@ -141,30 +148,32 @@ function UnitDetail({ entity, propertyId }) {
 }
 
 function UserDetail({ entity, propertyId }) {
+  const { t } = useI18n();
+  // User detail embeds occupancy rows to show the relationship between users and units.
   // User 详情内嵌该用户的 Occupancy 记录，展示用户与 Unit 关系。
   const rows = getModuleRows('occupancy', propertyId);
   return (
     <section className="detail-page">
-      <div className="breadcrumb">◂ Users</div>
+      <div className="breadcrumb">◂ {t('Users')}</div>
       <header className="detail-hero user-hero">
         <div className="avatar-large">⌾</div>
         <div>
           <h1>{entity.name}</h1>
-          <span><b>Email Address:</b> {entity.email}</span>
+          <span><b>{t('Email Address')}:</b> {entity.email}</span>
         </div>
         <div className="detail-hero__actions">
-          <Button variant="muted">Edit</Button>
-          <Button>Move-In</Button>
-          <Button>Move-Out</Button>
+          <Button variant="muted">{t('Edit')}</Button>
+          <Button>{t('Move-In')}</Button>
+          <Button>{t('Move-Out')}</Button>
         </div>
       </header>
-      <h2>General Info</h2>
+      <h2>{t('General Info')}</h2>
       <div className="settings-grid">
         {['firstName', 'lastName', 'email', 'phone', 'gender', 'type', 'group', 'tag1', 'tag2'].map((key) => (
-          <label className="field" key={key}><span>{labelize(key)}</span><input value={entity[key] || ''} readOnly /></label>
+          <label className="field" key={key}><span>{t(labelize(key))}</span><input value={entity[key] || ''} readOnly /></label>
         ))}
       </div>
-      <h2>Details</h2>
+      <h2>{t('Details')}</h2>
       <Tabs tabs={[{ id: '', label: 'Units' }, { id: 'mobile', label: 'Mobile Accesses' }, { id: 'ekeys', label: 'E-Keys' }, { id: 'devices', label: 'Devices' }, { id: 'audit', label: 'Audit Trail' }, { id: 'occupancy', label: 'Occupancy Log' }]} activeTab="" onChange={() => {}} />
       <DataTable columns={tableSchemas.occupancy} rows={rows} />
     </section>

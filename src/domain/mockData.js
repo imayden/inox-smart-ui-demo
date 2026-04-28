@@ -1,3 +1,4 @@
+// Temporary demo data source: every entity keeps a stable ID for routing, dedupe and future API migration.
 // 前端 demo 的临时数据源：保持 Property / Unit / Device / User / Credential 都有稳定 ID，方便路由和去重。
 export const properties = [
   {

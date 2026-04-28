@@ -1,13 +1,13 @@
 import {
   require_react_dom
-} from "./chunk-M6TBVS53.js";
+} from "./chunk-YBFRUR3B.js";
 import {
   __commonJS
-} from "./chunk-MKGNLP2Y.js";
+} from "./chunk-JRE55LYH.js";
 
-// ../../../../aiden-deng/inox-smart-ui-demo/node_modules/react-dom/client.js
+// node_modules/react-dom/client.js
 var require_client = __commonJS({
-  "../../../../aiden-deng/inox-smart-ui-demo/node_modules/react-dom/client.js"(exports) {
+  "node_modules/react-dom/client.js"(exports) {
     var m = require_react_dom();
     if (false) {
       exports.createRoot = m.createRoot;

@@ -1,11 +1,11 @@
 import {
   __commonJS,
   require_react
-} from "./chunk-MKGNLP2Y.js";
+} from "./chunk-JRE55LYH.js";
 
-// ../../../../aiden-deng/inox-smart-ui-demo/node_modules/react/cjs/react-jsx-dev-runtime.development.js
+// node_modules/react/cjs/react-jsx-dev-runtime.development.js
 var require_react_jsx_dev_runtime_development = __commonJS({
-  "../../../../aiden-deng/inox-smart-ui-demo/node_modules/react/cjs/react-jsx-dev-runtime.development.js"(exports) {
+  "node_modules/react/cjs/react-jsx-dev-runtime.development.js"(exports) {
     "use strict";
     if (true) {
       (function() {
@@ -884,9 +884,9 @@ var require_react_jsx_dev_runtime_development = __commonJS({
   }
 });
 
-// ../../../../aiden-deng/inox-smart-ui-demo/node_modules/react/jsx-dev-runtime.js
+// node_modules/react/jsx-dev-runtime.js
 var require_jsx_dev_runtime = __commonJS({
-  "../../../../aiden-deng/inox-smart-ui-demo/node_modules/react/jsx-dev-runtime.js"(exports, module) {
+  "node_modules/react/jsx-dev-runtime.js"(exports, module) {
     if (false) {
       module.exports = null;
     } else {

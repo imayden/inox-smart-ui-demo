@@ -11,6 +11,7 @@ import {
   Users,
 } from 'lucide-react';
 
+// Top navigation defines core product modules; the property sidebar is generated from mockData properties.
 // 顶部导航定义核心功能区块；侧边物业导航由 mockData 中的 properties 生成。
 export const MODULE_IDS = {
   dashboard: 'dashboard',
@@ -48,6 +49,7 @@ export const moduleMeta = {
   security: { title: 'Security' },
 };
 
+// Dashboard shortcuts store business target paths only, so v2/v3 can reuse the same route intent.
 // Dashboard 上的快捷入口只保存业务目标路径，不绑定具体 UI 版本，便于 v2/v3 复用。
 export const quickActions = [
   { label: 'Move-In', path: 'occupancy/move-in', icon: DoorOpen },

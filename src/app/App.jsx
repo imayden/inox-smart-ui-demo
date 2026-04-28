@@ -9,6 +9,7 @@ import { MoveInPage } from '../features/MoveInPage.jsx';
 import { GrantAccessPage } from '../features/GrantAccessPage.jsx';
 import { MODULE_IDS } from '../config/navigation.config.js';
 
+// URL owns version/property/module identity; the store shares that context across shell and pages.
 // URL 负责表达 demo 版本、当前物业和当前模块；全局 store 负责让导航、侧栏和页面共享这些上下文。
 function ScopedDemoRoutes() {
   const { uiVersion, propertyId } = useParams();
@@ -45,7 +46,7 @@ function ScopedDemoRoutes() {
 export function App() {
   return (
     <Routes>
-      {/* 默认进入 v1.0 的已登录 SaaS 主界面，方便直接查看当前复刻版本。 */}
+      {/* Default route opens the v1.0 SaaS shell for fast UI review. / 默认进入 v1.0 SaaS 主界面，方便直接查看当前复刻版本。 */}
       <Route path="/" element={<Navigate to="/demo/v1/property/p-1/dashboard" replace />} />
       <Route path="/demo/:uiVersion/property/:propertyId/*" element={<ScopedDemoRoutes />} />
       <Route path="*" element={<Navigate to="/demo/v1/property/p-1/dashboard" replace />} />

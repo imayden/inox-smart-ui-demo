@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Button } from '../components/ui.jsx';
 import { devices, units, users } from '../domain/mockData.js';
+import { useI18n } from '../i18n/useI18n.js';
 
 const rolePermissionPresets = {
   Admin: ['Full', 'Full', 'Full', 'Full'],
@@ -11,8 +12,10 @@ const rolePermissionPresets = {
 const permissionLabels = ['Manage Members', 'Manage Guests', 'E-Keys', 'Doorbell answering'];
 const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+// Move-In mirrors the production batch workflow: configure rules, select users/units, then submit assignments.
 // Move-In 复刻线上批量入住页：上半区配置入住规则，下半区把用户、Unit/设备组合成待提交任务。
 export function MoveInPage() {
+  const { t } = useI18n();
   const [role, setRole] = useState('Admin');
   const [permanentStay, setPermanentStay] = useState(true);
   const [mainResident, setMainResident] = useState(true);
@@ -56,50 +59,50 @@ export function MoveInPage() {
   if (submitted) {
     return (
       <section className="move-in-page">
-        <div className="breadcrumb">◂ Batch Move-In</div>
+        <div className="breadcrumb">◂ {t('Batch Move-In')}</div>
         <div className="processing-toolbar">
-          <p>Data processing in progress (ETA: 10s). Click to manually sync.</p>
-          <Button>Refresh</Button>
+          <p>{t('Data processing in progress (ETA: 10s). Click to manually sync.')}</p>
+          <Button>{t('Refresh')}</Button>
         </div>
         <div className="table-wrap">
           <table className="data-table move-result-table">
             <thead>
               <tr>
-                <th>Transaction ID</th>
-                <th>Unit Number</th>
-                <th>User Name</th>
-                <th>User Email Address</th>
-                <th>Role</th>
-                <th>Start Time</th>
-                <th>End Time</th>
-                <th>Device</th>
-                <th>Passcode Status</th>
-                <th>Card ID</th>
-                <th>Read RFIDs</th>
+                <th>{t('Transaction ID')}</th>
+                <th>{t('Unit Number')}</th>
+                <th>{t('User Name')}</th>
+                <th>{t('User Email Address')}</th>
+                <th>{t('Role')}</th>
+                <th>{t('Start Time')}</th>
+                <th>{t('End Time')}</th>
+                <th>{t('Device')}</th>
+                <th>{t('Passcode Status')}</th>
+                <th>{t('Card ID')}</th>
+                <th>{t('Read RFIDs')}</th>
               </tr>
             </thead>
             <tbody>
               {selectedAssignments.map((assignment, index) => (
                 <tr key={assignment.id}>
-                  <td data-label="Transaction ID">{32945 + index}</td>
-                  <td data-label="Unit Number">{assignment.unit.unitNumber}</td>
-                  <td data-label="User Name">{assignment.user.name}</td>
-                  <td data-label="User Email Address">{assignment.user.email}</td>
-                  <td data-label="Role">{role}</td>
-                  <td data-label="Start Time">2026-04-25 03:09 PM</td>
-                  <td data-label="End Time">{permanentStay ? '2100-12-31 11:59 PM' : '2026-05-25 11:59 PM'}</td>
-                  <td data-label="Device">{assignment.device.name}</td>
-                  <td data-label="Passcode Status">{access.passcode ? 'Queued' : '-'}</td>
-                  <td data-label="Card ID">{access.ekey ? 'Pending' : '-'}</td>
-                  <td data-label="Read RFIDs">-</td>
+                  <td data-label={t('Transaction ID')}>{32945 + index}</td>
+                  <td data-label={t('Unit Number')}>{assignment.unit.unitNumber}</td>
+                  <td data-label={t('User Name')}>{assignment.user.name}</td>
+                  <td data-label={t('User Email Address')}>{assignment.user.email}</td>
+                  <td data-label={t('Role')}>{t(role)}</td>
+                  <td data-label={t('Start Time')}>2026-04-25 03:09 PM</td>
+                  <td data-label={t('End Time')}>{permanentStay ? '2100-12-31 11:59 PM' : '2026-05-25 11:59 PM'}</td>
+                  <td data-label={t('Device')}>{assignment.device.name}</td>
+                  <td data-label={t('Passcode Status')}>{access.passcode ? t('Queued') : '-'}</td>
+                  <td data-label={t('Card ID')}>{access.ekey ? t('Pending') : '-'}</td>
+                  <td data-label={t('Read RFIDs')}>-</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
         <div className="form-footer">
-          <Button variant="muted" onClick={() => setSubmitted(false)}>Back to Move-In</Button>
-          <Button>Refresh</Button>
+          <Button variant="muted" onClick={() => setSubmitted(false)}>{t('Back to Move-In')}</Button>
+          <Button>{t('Refresh')}</Button>
         </div>
       </section>
     );
@@ -107,47 +110,47 @@ export function MoveInPage() {
 
   return (
     <section className="move-in-page">
-      <div className="breadcrumb">◂ Batch Move-In</div>
-      <h1>Move-In</h1>
+      <div className="breadcrumb">◂ {t('Batch Move-In')}</div>
+      <h1>{t('Move-In')}</h1>
       <div className="move-in-layout">
         <Panel title="1 Move-In Date & Time">
           <SwitchRow label="Permanent Stay" checked={permanentStay} onChange={setPermanentStay} />
           <SwitchRow label="Main Resident" checked={mainResident} onChange={setMainResident} />
-          <label className="field"><span>Move-In</span><input defaultValue="2026-04-25 03:09 PM" /></label>
-          <label className="field"><span>Move-Out</span><input defaultValue={permanentStay ? '2100-12-31 11:59 PM' : ''} disabled={permanentStay} /></label>
+          <label className="field"><span>{t('Move-In')}</span><input defaultValue="2026-04-25 03:09 PM" /></label>
+          <label className="field"><span>{t('Move-Out')}</span><input defaultValue={permanentStay ? '2100-12-31 11:59 PM' : ''} disabled={permanentStay} /></label>
         </Panel>
         <Panel title="2 Access">
           <CheckboxRow label="Mobile Access" checked={access.mobile} onChange={(checked) => setAccess((current) => ({ ...current, mobile: checked }))} />
           <CheckboxRow label="E-Keys" checked={access.ekey} onChange={(checked) => setAccess((current) => ({ ...current, ekey: checked }))}>
-            <select><option>RFID Card</option><option>RFID FOB</option></select>
+            <select><option>{t('RFID Card')}</option><option>{t('RFID FOB')}</option></select>
           </CheckboxRow>
           <CheckboxRow label="Passcode" checked={access.passcode} onChange={(checked) => setAccess((current) => ({ ...current, passcode: checked }))}>
-            <select><option>System-Gen</option><option>User-Defined</option></select>
+            <select><option>{t('System-Gen')}</option><option>{t('User-Defined')}</option></select>
             <select><option>4 Digits</option><option>6 Digits</option></select>
           </CheckboxRow>
         </Panel>
         <Panel title="3 Roles">
           {['Admin', 'Member', 'Guest'].map((item) => (
-            <button className={role === item ? 'is-active' : ''} key={item} onClick={() => setRole(item)}>{item}</button>
+            <button className={role === item ? 'is-active' : ''} key={item} onClick={() => setRole(item)}>{t(item)}</button>
           ))}
         </Panel>
         <Panel title="4 Permissions">
           {permissionLabels.map((item, index) => (
             <label className="permission-row" key={item}>
-              <span>{item}</span>
+              <span>{t(item)}</span>
               <select value={permissions[index]} onChange={() => {}}>
-                <option>Full</option>
-                <option>None</option>
+                <option value="Full">{t('Full')}</option>
+                <option value="None">{t('None')}</option>
               </select>
             </label>
           ))}
-          <label className="permission-row"><span>Mobile Access Type</span><select defaultValue="On-site & Remote"><option>On-site & Remote</option><option>On-site Only</option></select></label>
+          <label className="permission-row"><span>{t('Mobile Access Type')}</span><select defaultValue="On-site & Remote"><option value="On-site & Remote">{t('On-site & Remote')}</option><option value="On-site Only">{t('On-site Only')}</option></select></label>
         </Panel>
         <Panel title="Scheduled Access (Optional)">
           <SwitchRow label="Recurring Schedule" checked={recurringSchedule} onChange={setRecurringSchedule} />
           <div className="time-pair">
-            <label className="field"><span>Start Time</span><input defaultValue="12:00 AM" /></label>
-            <label className="field"><span>End Time</span><input defaultValue="11:59 PM" /></label>
+            <label className="field"><span>{t('Start Time')}</span><input defaultValue="12:00 AM" /></label>
+            <label className="field"><span>{t('End Time')}</span><input defaultValue="11:59 PM" /></label>
           </div>
           <div className="schedule-days">
             {weekDays.map((day) => (
@@ -157,7 +160,7 @@ export function MoveInPage() {
                   checked={selectedDays.includes(day)}
                   disabled={!recurringSchedule}
                   onChange={() => toggleListValue(day, selectedDays, setSelectedDays)}
-                /> {day}
+                /> {t(day)}
               </label>
             ))}
           </div>
@@ -170,9 +173,9 @@ export function MoveInPage() {
           <SimpleTable headers={['User', 'Email Address']}>
             {filteredUsers.map((user) => (
               <tr key={user.id} className={selectedUserIds.includes(user.id) ? 'is-selected' : ''}>
-                <td data-label="Select"><input type="checkbox" checked={selectedUserIds.includes(user.id)} onChange={() => toggleListValue(user.id, selectedUserIds, setSelectedUserIds)} /></td>
-                <td data-label="User">{user.name}</td>
-                <td data-label="Email Address">{user.email}</td>
+                <td data-label={t('Select')}><input type="checkbox" checked={selectedUserIds.includes(user.id)} onChange={() => toggleListValue(user.id, selectedUserIds, setSelectedUserIds)} /></td>
+                <td data-label={t('User')}>{user.name}</td>
+                <td data-label={t('Email Address')}>{user.email}</td>
               </tr>
             ))}
           </SimpleTable>
@@ -181,13 +184,13 @@ export function MoveInPage() {
         <section className="selector-panel">
           <SelectorHeader title="Show Vacant Units Only" search={unitSearch} setSearch={setUnitSearch} />
           <SimpleTable headers={['Units', 'Status']}>
-            <tr className="tree-row"><td data-label="Select"><input type="checkbox" /></td><td data-label="Units">− Main Building</td><td data-label="Status" /></tr>
-            <tr className="tree-row"><td data-label="Select"><input type="checkbox" /></td><td data-label="Units">− 1st Floor</td><td data-label="Status" /></tr>
+            <tr className="tree-row"><td data-label={t('Select')}><input type="checkbox" /></td><td data-label={t('Units')}>− Main Building</td><td data-label={t('Status')} /></tr>
+            <tr className="tree-row"><td data-label={t('Select')}><input type="checkbox" /></td><td data-label={t('Units')}>− 1st Floor</td><td data-label={t('Status')} /></tr>
             {filteredUnits.map((unit) => (
               <tr key={unit.id} className={selectedUnitIds.includes(unit.id) ? 'is-selected' : ''}>
-                <td data-label="Select"><input type="checkbox" checked={selectedUnitIds.includes(unit.id)} onChange={() => toggleListValue(unit.id, selectedUnitIds, setSelectedUnitIds)} /></td>
-                <td data-label="Units">+ {unit.name}</td>
-                <td data-label="Status">{unit.occupied ? 'Occupied' : 'Vacant'}</td>
+                <td data-label={t('Select')}><input type="checkbox" checked={selectedUnitIds.includes(unit.id)} onChange={() => toggleListValue(unit.id, selectedUnitIds, setSelectedUnitIds)} /></td>
+                <td data-label={t('Units')}>+ {unit.name}</td>
+                <td data-label={t('Status')}>{unit.occupied ? t('Occupied') : t('Vacant')}</td>
               </tr>
             ))}
           </SimpleTable>
@@ -195,37 +198,41 @@ export function MoveInPage() {
 
         <section className="selector-panel selected-assignment">
           <div className="selector-actions">
-            <Button variant="muted" onClick={() => { setSelectedUserIds([]); setSelectedUnitIds([]); }}>Clear All</Button>
+            <Button variant="muted" onClick={() => { setSelectedUserIds([]); setSelectedUnitIds([]); }}>{t('Clear All')}</Button>
           </div>
           <SimpleTable headers={['User', 'Units', 'Devices']} selectable={false}>
             {selectedAssignments.map((assignment) => (
               <tr key={assignment.id}>
-                <td data-label="User">{assignment.user.name}</td>
-                <td data-label="Units"><span className="chip">{assignment.unit.unitNumber}</span></td>
-                <td data-label="Devices"><span className="chip">{assignment.device.name}</span></td>
+                <td data-label={t('User')}>{assignment.user.name}</td>
+                <td data-label={t('Units')}><span className="chip">{assignment.unit.unitNumber}</span></td>
+                <td data-label={t('Devices')}><span className="chip">{assignment.device.name}</span></td>
               </tr>
             ))}
-            {!selectedAssignments.length && <tr><td colSpan="3"><div className="empty-state">No data</div></td></tr>}
+            {!selectedAssignments.length && <tr><td colSpan="3"><div className="empty-state">{t('No data')}</div></td></tr>}
           </SimpleTable>
         </section>
       </div>
 
       <div className="form-footer">
-        <Button variant="muted">Cancel</Button>
-        <Button onClick={handleConfirm} disabled={!selectedAssignments.length}>Confirm</Button>
+        <Button variant="muted">{t('Cancel')}</Button>
+        <Button onClick={handleConfirm} disabled={!selectedAssignments.length}>{t('Confirm')}</Button>
       </div>
     </section>
   );
 }
 
 function Panel({ title, children }) {
-  return <section className="move-panel"><h2>{title}</h2>{children}</section>;
+  const { t } = useI18n();
+  const displayTitle = title.replace(/^\d\s/, '');
+  const step = title.match(/^\d/)?.[0];
+  return <section className="move-panel"><h2>{step ? `${step} ` : ''}{t(displayTitle)}</h2>{children}</section>;
 }
 
 function SwitchRow({ label, checked, onChange }) {
+  const { t } = useI18n();
   return (
     <label className="switch-row">
-      <span>{label}</span>
+      <span>{t(label)}</span>
       <input className="sr-only" type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
       <span className={`switch ${checked ? 'is-on' : ''}`} />
     </label>
@@ -233,35 +240,38 @@ function SwitchRow({ label, checked, onChange }) {
 }
 
 function CheckboxRow({ label, checked, onChange, children }) {
+  const { t } = useI18n();
   return (
     <label className="checkbox-row">
       <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
-      <span>{label}</span>
+      <span>{t(label)}</span>
       {children}
     </label>
   );
 }
 
 function SelectorHeader({ title, search, setSearch }) {
+  const { t } = useI18n();
   return (
     <div className="selector-header">
       <SwitchRow label={title} checked={false} onChange={() => {}} />
       <div className="selector-search">
-        <input value={search} placeholder="Search here..." onChange={(event) => setSearch(event.target.value)} />
-        <Button>Next</Button>
+        <input value={search} placeholder={t('Search here...')} onChange={(event) => setSearch(event.target.value)} />
+        <Button>{t('Next')}</Button>
       </div>
     </div>
   );
 }
 
 function SimpleTable({ headers, children, selectable = true }) {
+  const { t } = useI18n();
   return (
     <div className="table-wrap">
       <table className="mini-table">
         <thead>
           <tr>
             {selectable && <th><input type="checkbox" /></th>}
-            {headers.map((header) => <th key={header}>{header}</th>)}
+            {headers.map((header) => <th key={header}>{t(header)}</th>)}
           </tr>
         </thead>
         <tbody>{children}</tbody>

@@ -1,3 +1,4 @@
+// Lightweight permission model for demo UI behavior; later replace with backend license/role policy.
 // 轻量权限模型：现在只驱动 demo UI 行为，后续可替换成后端返回的 license / role policy。
 const roleActions = {
   owner: ['*'],
