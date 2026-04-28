@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Grid2X2, List, MessageSquare, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button, DataTable, Modal, PageHeader, SearchPanel, Tabs } from '../components/ui.jsx';
 import { moduleMeta } from '../config/navigation.config.js';
@@ -16,16 +17,26 @@ export function EntityListPage({ moduleId }) {
   const uiVersion = useDemoStore((state) => state.uiVersion);
   const [activeTab, setActiveTab] = useState(tabSchemas[moduleId]?.[0]?.id ?? '');
   const [modalRow, setModalRow] = useState(null);
+  const [propertyView, setPropertyView] = useState('grid');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [visiblePropertyColumns, setVisiblePropertyColumns] = useState(() => tableSchemas.properties.map((column) => column.key));
   const property = getProperty(propertyId);
   const meta = moduleMeta[moduleId];
 
   const rows = useMemo(() => getModuleRows(moduleId, propertyId, activeTab), [moduleId, propertyId, activeTab]);
-  const columns = moduleId === 'security' && activeTab === 'audit' ? tableSchemas.securityAudit : tableSchemas[moduleId];
+  const baseColumns = moduleId === 'security' && activeTab === 'audit' ? tableSchemas.securityAudit : tableSchemas[moduleId];
+  const columns = moduleId === 'properties'
+    ? baseColumns.filter((column) => visiblePropertyColumns.includes(column.key))
+    : baseColumns;
 
   const handleEdit = (row) => {
     // Full-detail entities navigate to detail pages; lightweight edits stay in a modal.
     // 需要完整详情页的实体走路由；轻量编辑操作先用弹窗模拟。
-    if (['properties', 'devices', 'users'].includes(moduleId)) {
+    if (moduleId === 'properties') {
+      setModalRow(row);
+      return;
+    }
+    if (['devices', 'users'].includes(moduleId)) {
       navigate(`/demo/${uiVersion}/property/${propertyId}/${moduleId}/${row.id}`);
       return;
     }
@@ -35,6 +46,10 @@ export function EntityListPage({ moduleId }) {
   const handleHeaderAction = () => {
     // Header actions route into the two guided workflows: Grant Access and Move-In.
     // Access 的主按钮进入 Grant Access 表单；Occupancy 的主按钮进入批量 Move-In 流程。
+    if (moduleId === 'properties') {
+      setModalRow({ id: 'new-property', name: '', address: '', owner: '' });
+      return;
+    }
     if (moduleId === 'access') {
       navigate(`/demo/${uiVersion}/property/${propertyId}/access/grant`);
       return;
@@ -50,6 +65,33 @@ export function EntityListPage({ moduleId }) {
     if (moduleId !== 'units') return;
     window.open(`/demo/${uiVersion}/property/${propertyId}/units/${row.id}`, '_blank', 'noopener,noreferrer');
   };
+
+  if (moduleId === 'properties') {
+    return (
+      <section className="module-page properties-page">
+        <PropertiesHeader
+          view={propertyView}
+          setView={setPropertyView}
+          filterOpen={filterOpen}
+          setFilterOpen={setFilterOpen}
+          visibleColumns={visiblePropertyColumns}
+          setVisibleColumns={setVisiblePropertyColumns}
+          onAdd={handleHeaderAction}
+        />
+        <SearchPanel fields={filterSchemas.properties} />
+        {propertyView === 'grid' ? (
+          <PropertyCardGrid rows={rows} onOpen={(row) => navigate(`/demo/${uiVersion}/property/${propertyId}/properties/${row.id}`)} onEdit={handleEdit} />
+        ) : (
+          <DataTable columns={columns} rows={rows} onEdit={handleEdit} onRowClick={(row) => navigate(`/demo/${uiVersion}/property/${propertyId}/properties/${row.id}`)} />
+        )}
+        {modalRow && (
+          <Modal title={modalRow.id === 'new-property' ? '+ Add Property' : 'Update Property'} onClose={() => setModalRow(null)}>
+            <PropertyEditorMock row={modalRow} onClose={() => setModalRow(null)} />
+          </Modal>
+        )}
+      </section>
+    );
+  }
 
   return (
     <section className="module-page">
@@ -73,6 +115,97 @@ export function EntityListPage({ moduleId }) {
       )}
     </section>
   );
+}
+
+function PropertiesHeader({ view, setView, filterOpen, setFilterOpen, visibleColumns, setVisibleColumns, onAdd }) {
+  const { t } = useI18n();
+  const propertyColumns = tableSchemas.properties.filter((column) => column.key !== 'image');
+  const allVisible = propertyColumns.every((column) => visibleColumns.includes(column.key));
+
+  const toggleColumn = (key) => {
+    setVisibleColumns((current) => current.includes(key) ? current.filter((item) => item !== key) : [...current, key]);
+  };
+
+  return (
+    <header className="page-header property-page-header">
+      <h1>{t('Properties')}</h1>
+      <div className="page-header__actions property-toolbar">
+        <div className="filter-popover-wrap">
+          <Button variant="muted" onClick={() => setFilterOpen(!filterOpen)}>{t('Filter')}</Button>
+          {filterOpen && (
+            <div className="filter-popover">
+              <label><input type="checkbox" checked={allVisible} onChange={(event) => setVisibleColumns(event.target.checked ? tableSchemas.properties.map((column) => column.key) : ['image'])} /> {t('Check all')}</label>
+              {propertyColumns.map((column) => (
+                <label key={column.key}>
+                  <input type="checkbox" checked={visibleColumns.includes(column.key)} onChange={() => toggleColumn(column.key)} /> {t(column.label)}
+                </label>
+              ))}
+              <div className="filter-popover__actions">
+                <Button onClick={() => setFilterOpen(false)}>{t('Apply')}</Button>
+                <Button variant="muted" onClick={() => setVisibleColumns(tableSchemas.properties.map((column) => column.key))}>{t('Reset')}</Button>
+              </div>
+            </div>
+          )}
+        </div>
+        <button className="icon-only" aria-label={t('List view')} onClick={() => setView('list')}><List className={view === 'list' ? 'state-green' : ''} /></button>
+        <button className="icon-only" aria-label={t('Grid view')} onClick={() => setView('grid')}><Grid2X2 className={view === 'grid' ? 'state-green' : ''} /></button>
+        <Button onClick={onAdd}>{t('+ Add Property')}</Button>
+      </div>
+    </header>
+  );
+}
+
+function PropertyCardGrid({ rows, onOpen, onEdit }) {
+  const { t } = useI18n();
+  return (
+    <div className="property-card-grid">
+      {rows.map((row) => (
+        <article className="property-card" key={row.id} onClick={() => onOpen(row)}>
+          <img src={row.image} alt={row.name} />
+          <h2>{row.name}</h2>
+          <p>{row.address} · {row.country}</p>
+          <div className="property-card__actions" onClick={(event) => event.stopPropagation()}>
+            <button aria-label={t('Details')} onClick={() => onOpen(row)}><MessageSquare size={22} /></button>
+            <button aria-label={t('Delete')}><Trash2 size={22} /></button>
+            <Button variant="muted" onClick={() => onEdit(row)}>{t('Update')}</Button>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function PropertyEditorMock({ row, onClose }) {
+  const { t } = useI18n();
+  return (
+    <div className="modal-form property-editor">
+      <div className="unit-photo-box">
+        <label>* {t('Photo')}</label>
+        <img src={row.image || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=520&q=80'} alt="" />
+        <small>{t('File Format')}: .jpg .jpeg .png</small>
+      </div>
+      <label className="field"><span>{t('Property ID')}</span><input value={row.id || ''} readOnly /></label>
+      {['Property Name', 'Street Address', 'City', 'State', 'Zip Code', 'Country', 'Owner', 'Time Zone'].map((label) => (
+        <label className="field" key={label}>
+          <span>{t(label)}</span>
+          <input defaultValue={row[labelKey(label)] || ''} placeholder={t(label)} />
+        </label>
+      ))}
+      <div className="modal-actions modal-form__wide">
+        <Button variant="muted" onClick={onClose}>{t('Cancel')}</Button>
+        <Button onClick={onClose}>{t('Confirm')}</Button>
+      </div>
+    </div>
+  );
+}
+
+function labelKey(label) {
+  return {
+    'Property Name': 'name',
+    'Street Address': 'address',
+    'Zip Code': 'zipCode',
+    'Time Zone': 'timeZone',
+  }[label] ?? label.charAt(0).toLowerCase() + label.slice(1);
 }
 
 function listTitle(moduleId, activeTab) {

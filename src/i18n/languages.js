@@ -321,6 +321,16 @@ Object.assign(uiText, {
   },
   'device(s).': { es: 'dispositivo(s).', zh: '个设备。' },
   'has been assigned to': { es: 'se asignó a', zh: '已分配到' },
+  'All (Checked-In)': { es: 'Todos (registrados)', zh: '全部（已入住）' },
+  'Apply': { es: 'Aplicar', zh: '应用' },
+  'Accessible Users': { es: 'Usuarios con acceso', zh: '可访问用户' },
+  'Check all': { es: 'Seleccionar todo', zh: '全选' },
+  'Grid view': { es: 'Vista de cuadrícula', zh: '网格视图' },
+  'List view': { es: 'Vista de lista', zh: '列表视图' },
+  'Property ID': { es: 'ID de propiedad', zh: '物业 ID' },
+  'Reset': { es: 'Restablecer', zh: '重置' },
+  'Time Zone': { es: 'Zona horaria', zh: '时区' },
+  'Update Property': { es: 'Actualizar propiedad', zh: '更新物业' },
 });
 
 export function translateUi(key, language = LANGUAGE_IDS.en) {

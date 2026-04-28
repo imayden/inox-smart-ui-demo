@@ -1,4 +1,5 @@
 import { Building2, DoorOpen, KeyRound, ShieldAlert } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui.jsx';
 import { useDemoStore } from '../demo/demoStore.js';
 import { getProperty, getStats } from '../domain/selectors.js';
@@ -6,17 +7,51 @@ import { useI18n } from '../i18n/useI18n.js';
 
 export function DashboardPage() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const propertyId = useDemoStore((state) => state.propertyId);
+  const uiVersion = useDemoStore((state) => state.uiVersion);
   const property = getProperty(propertyId);
   const stats = getStats(propertyId);
+  const goTo = (path) => navigate(`/demo/${uiVersion}/property/${propertyId}/${path}`);
 
   return (
     <section className="dashboard-page">
       {/* Dashboard cards mirror v1.0 while stats still react to the selected property. / Dashboard 复刻 v1.0 首页信息卡片，数据按当前物业动态切换。 */}
       <div className="dashboard-grid">
-        <FeatureCard icon={<DoorOpen />} title="Unit" items={['Move-In', 'Move-Out', 'Update Occupancy', 'Schedule Viewing']} />
-        <FeatureCard icon={<KeyRound />} title="Access" items={['Add an RFID', 'Delete an RFID', 'Add a Passcode', 'Delete a Passcode', 'Quick One-Time Passcode']} />
-        <FeatureCard icon={<ShieldAlert />} title="Security" items={['Audit Trail', 'Security Alert', 'Passage Mode', 'Privacy Mode']} />
+        <FeatureCard
+          icon={<DoorOpen />}
+          title="Unit"
+          items={[
+            { label: 'Move-In', path: 'occupancy/move-in' },
+            { label: 'Move-Out', path: 'occupancy' },
+            { label: 'Update Occupancy', path: 'occupancy' },
+            { label: 'Schedule Viewing', path: 'calendar' },
+          ]}
+          onSelect={goTo}
+        />
+        <FeatureCard
+          icon={<KeyRound />}
+          title="Access"
+          items={[
+            { label: 'Add an RFID', path: 'access/grant?type=rfid' },
+            { label: 'Delete an RFID', path: 'access' },
+            { label: 'Add a Passcode', path: 'access/grant?type=passcode' },
+            { label: 'Delete a Passcode', path: 'access' },
+            { label: 'Quick One-Time Passcode', path: 'access/grant?type=passcode' },
+          ]}
+          onSelect={goTo}
+        />
+        <FeatureCard
+          icon={<ShieldAlert />}
+          title="Security"
+          items={[
+            { label: 'Audit Trail', path: 'security' },
+            { label: 'Security Alert', path: 'security' },
+            { label: 'Passage Mode', path: 'security' },
+            { label: 'Privacy Mode', path: 'security' },
+          ]}
+          onSelect={goTo}
+        />
         <article className="dashboard-card property-overview">
           <h2><Building2 /> {t('Property Overview')}</h2>
           <div><span>{t('Total Units Occupied')}</span><b>{stats.occupied}</b></div>
@@ -28,7 +63,7 @@ export function DashboardPage() {
           <label className="field"><span>{t('Name')}</span><input placeholder={t('Name')} /></label>
           <label className="field"><span>{t('Type')}</span><select><option>{t('Units')}</option></select></label>
           <label className="field"><span>{t('Property')}</span><select><option>{property.name}</option></select></label>
-          <Button>{t('Search')}</Button>
+          <Button onClick={() => goTo('units')}>{t('Search')}</Button>
         </article>
         <CalendarMini />
         <article className="dashboard-card quick-add">
@@ -36,19 +71,19 @@ export function DashboardPage() {
           {['User Email Address', 'First Name', 'Last Name', 'From', 'To', 'Unit', 'Card Name', 'E-Key Type', 'Device'].map((label) => (
             <label className="field" key={label}><span>{t(label)}</span><input placeholder={t(label)} /></label>
           ))}
-          <div className="quick-add__actions"><Button variant="muted">{t('Cancel')}</Button><Button>{t('Confirm')}</Button></div>
+          <div className="quick-add__actions"><Button variant="muted">{t('Cancel')}</Button><Button onClick={() => goTo('access/grant')}>{t('Confirm')}</Button></div>
         </article>
       </div>
     </section>
   );
 }
 
-function FeatureCard({ icon, title, items }) {
+function FeatureCard({ icon, title, items, onSelect }) {
   const { t } = useI18n();
   return (
     <article className="dashboard-card feature-card">
       <h2>{icon} {t(title)}</h2>
-      {items.map((item) => <button key={item}>{t(item)}</button>)}
+      {items.map((item) => <button key={item.label} onClick={() => onSelect(item.path)}>{t(item.label)}</button>)}
     </article>
   );
 }

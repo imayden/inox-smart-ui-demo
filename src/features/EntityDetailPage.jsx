@@ -1,6 +1,8 @@
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, DataTable, FormGrid, Tabs } from '../components/ui.jsx';
 import { tableSchemas } from '../config/schemas.js';
+import { auditEvents, credentials, devices, occupancyTransactions } from '../domain/mockData.js';
 import { getEntity, getModuleRows } from '../domain/selectors.js';
 import { useDemoStore } from '../demo/demoStore.js';
 import { useI18n } from '../i18n/useI18n.js';
@@ -84,7 +86,9 @@ function UnitDetail({ entity, propertyId }) {
   const { t } = useI18n();
   const navigate = useNavigate();
   const uiVersion = useDemoStore((state) => state.uiVersion);
-  const rows = getModuleRows('users', propertyId).slice(0, 8).map((user, index) => ({
+  const [activeTab, setActiveTab] = useState('users');
+  const [activeUserTab, setActiveUserTab] = useState('all');
+  const userRows = getModuleRows('users', propertyId).slice(0, 8).map((user, index) => ({
     ...user,
     role: index === 0 ? 'Owner' : index % 3 === 0 ? 'Administrator' : index % 2 === 0 ? 'Member' : 'Guest',
     mainResident: index % 2 === 0,
@@ -92,6 +96,15 @@ function UnitDetail({ entity, propertyId }) {
     endTime: index === 0 ? '-' : '2100-12-31 11:59 PM',
     status: 'Moved-In',
   }));
+  const visibleUserRows = useMemo(() => {
+    if (activeUserTab === 'all') return userRows;
+    if (activeUserTab === 'pending' || activeUserTab === 'accessible') return [];
+    return userRows.filter((row) => row.role.toLowerCase() === activeUserTab);
+  }, [activeUserTab, userRows]);
+  const unitDevices = devices.filter((device) => device.unitId === entity.id);
+  const unitCredentials = credentials.filter((credential) => credential.unitNumber === entity.unitNumber || credential.unitNumber.includes(entity.name)).slice(0, 8);
+  const unitAudits = auditEvents.filter((event) => event.unitNumber === entity.unitNumber || event.unitNumber.includes(entity.name)).slice(0, 8);
+  const unitOccupancy = occupancyTransactions.filter((item) => item.unitId === entity.id || item.unitNumber === entity.unitNumber).slice(0, 8);
 
   // Unit Detail is one real entry point for Move-In, matching the production workflow.
   // Unit Detail 是 Move-In 的真实入口之一，按钮直接进入批量 Move-In 页面。
@@ -110,40 +123,93 @@ function UnitDetail({ entity, propertyId }) {
         </div>
         <img src={entity.photo} alt={entity.name} />
       </header>
-      <Tabs tabs={[{ id: '', label: 'Users' }, { id: 'devices', label: 'Devices' }, { id: 'ekeys', label: 'E-Keys' }, { id: 'audit', label: 'Audit Trail' }, { id: 'occupancy', label: 'Occupancy Log' }]} activeTab="" onChange={() => {}} />
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th className="checkbox-cell"><input type="checkbox" /></th>
-              <th>{t('User Name')}</th>
-              <th>{t('User Email Address')}</th>
-              <th>{t('Role')}</th>
-              <th>{t('Main Resident')}</th>
-              <th>{t('Start Time')}</th>
-              <th>{t('End Time')}</th>
-              <th>{t('Status')}</th>
-              <th>{t('Action')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.id}>
-                <td className="checkbox-cell"><input type="checkbox" /></td>
-                <td>{row.name}</td>
-                <td>{row.email}</td>
-                <td>{t(row.role)}</td>
-                <td><span className={`status-box ${row.mainResident ? 'is-on' : ''}`} /></td>
-                <td>{row.startTime}</td>
-                <td>{row.endTime}</td>
-                <td>{t(row.status)}</td>
-                <td>-</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Tabs
+        tabs={[
+          { id: 'users', label: 'Users' },
+          { id: 'devices', label: 'Devices' },
+          { id: 'ekeys', label: 'E-Keys' },
+          { id: 'audit', label: 'Audit Trail' },
+          { id: 'occupancy', label: 'Occupancy Log' },
+        ]}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+      />
+      {activeTab === 'users' && (
+        <>
+          <Tabs
+            tabs={[
+              { id: 'all', label: 'All (Checked-In)' },
+              { id: 'member', label: 'Member' },
+              { id: 'guest', label: 'Guest' },
+              { id: 'administrator', label: 'Administrator' },
+              { id: 'owner', label: 'Owner' },
+              { id: 'pending', label: 'Pending' },
+              { id: 'accessible', label: 'Accessible Users' },
+            ]}
+            activeTab={activeUserTab}
+            onChange={setActiveUserTab}
+          />
+          <UnitUsersTable rows={visibleUserRows} />
+        </>
+      )}
+      {activeTab === 'devices' && (
+        <DataTable columns={tableSchemas.devices} rows={unitDevices.length ? unitDevices : devices.slice(0, 3)} />
+      )}
+      {activeTab === 'ekeys' && (
+        <DataTable columns={tableSchemas.access} rows={unitCredentials.length ? unitCredentials : credentials.slice(0, 4)} />
+      )}
+      {activeTab === 'audit' && (
+        <DataTable columns={tableSchemas.securityAudit} rows={unitAudits.length ? unitAudits : auditEvents.slice(0, 5)} />
+      )}
+      {activeTab === 'occupancy' && (
+        <DataTable columns={tableSchemas.occupancy} rows={unitOccupancy.length ? unitOccupancy : occupancyTransactions.slice(0, 5)} />
+      )}
     </section>
+  );
+}
+
+function UnitUsersTable({ rows }) {
+  const { t } = useI18n();
+  return (
+    <div className="table-wrap">
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th className="checkbox-cell"><input type="checkbox" /></th>
+            <th>{t('User Name')}</th>
+            <th>{t('User Email Address')}</th>
+            <th>{t('Phone Number')}</th>
+            <th>{t('Role')}</th>
+            <th>{t('Main Resident')}</th>
+            <th>{t('Start Time')}</th>
+            <th>{t('End Time')}</th>
+            <th>{t('Status')}</th>
+            <th>{t('Action')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.id}>
+              <td className="checkbox-cell"><input type="checkbox" /></td>
+              <td>{row.name}</td>
+              <td>{row.email}</td>
+              <td>{row.phone || '-'}</td>
+              <td>{t(row.role)}</td>
+              <td><span className={`status-box ${row.mainResident ? 'is-on' : ''}`} /></td>
+              <td>{row.startTime}</td>
+              <td>{row.endTime}</td>
+              <td>{t(row.status)}</td>
+              <td>-</td>
+            </tr>
+          ))}
+          {!rows.length && (
+            <tr>
+              <td colSpan="10"><div className="empty-state">{t('No data')}</div></td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
