@@ -1,3 +1,5 @@
+/* Demo controls sit above the product shell and are for QA/state switching only, not part of production SaaS chrome. */
+/* Demo Controls 位于产品外壳上方，仅用于测试状态切换，不属于正式 SaaS 顶部导航。 */
 .demo-control {
   position: sticky;
   top: 0;
@@ -47,6 +49,8 @@
   border: 1px solid #555;
 }
 
+/* Product shell layout uses a CSS variable for sidebar width so collapse/expand can move content without JS layout math. */
+/* 产品外壳通过 CSS 变量控制侧栏宽度，折叠/展开时无需在 JS 中计算内容区位置。 */
 .product-shell {
   --active-sidebar-width: var(--sidebar-width);
   min-height: calc(100vh - var(--demo-bar-height));
@@ -56,6 +60,8 @@
   --active-sidebar-width: var(--sidebar-collapsed-width);
 }
 
+/* Top navigation represents product modules such as Dashboard, Units, Access and Security. */
+/* 顶部导航代表产品功能模块，例如 Dashboard、Units、Access、Security。 */
 .top-nav {
   position: sticky;
   top: var(--demo-bar-height);
@@ -107,6 +113,8 @@
   white-space: nowrap;
 }
 
+/* Language dropdown is shared by logged-in shell and login page; language state is persisted by the demo store. */
+/* 语言下拉菜单同时用于登录页和登录后外壳；语言状态由 demo store 持久化。 */
 .language-menu {
   position: relative;
   display: inline-flex;
@@ -182,6 +190,8 @@
   display: none;
 }
 
+/* Property sidebar is the higher-level data/permission scope. Desktop uses an inline sidebar. */
+/* 物业侧栏是更高层的数据与权限上下文。桌面端使用常驻侧栏。 */
 .property-sidebar {
   position: fixed;
   top: calc(var(--topbar-height) + var(--demo-bar-height));
@@ -295,6 +305,8 @@
   transition: left 0.2s ease;
 }
 
+/* Main content follows the active property sidebar width; collapsed mode recenters the workspace slightly. */
+/* 主内容区跟随物业侧栏宽度变化；折叠时通过 padding 让内容稍微回到中间。 */
 .main-content {
   margin-left: var(--active-sidebar-width);
   min-height: calc(100vh - var(--topbar-height) - var(--demo-bar-height));
@@ -316,6 +328,8 @@
   margin: 0 auto;
 }
 
+/* Desktop/tablet tightening: preserve the v1.0 layout while reducing logo/sidebar/content spacing. */
+/* 桌面/平板收紧规则：在保留 v1.0 结构的同时压缩 logo、侧栏和内容间距。 */
 @media (max-width: 1100px) {
   :root {
     --sidebar-width: 220px;
@@ -339,6 +353,8 @@
   }
 }
 
+/* Mobile shell: top modules collapse into a burger menu, and property switching becomes a 75% overlay drawer. */
+/* 手机端外壳：顶部模块折叠进 burger 菜单，物业切换变成 75% 宽度的遮罩抽屉。 */
 @media (max-width: 860px) {
   :root {
     --content-pad: 18px;

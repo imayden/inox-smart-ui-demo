@@ -55,6 +55,8 @@ export const properties = [
   { id: 'p-8', name: "Travis' Property", image: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=520&q=80', address: '4000 Marconi Ave', city: 'Sacramento', state: 'California', zipCode: '95821', country: 'United States of America', owner: 'Travis Admin', timeZone: 'America/Los_Angeles' },
 ];
 
+// Compact source arrays keep the demo readable; mapping below expands them into production-like row objects.
+// 为了让示例数据更易读，先用紧凑数组保存核心字段，再统一映射成接近真实接口的对象结构。
 const unitNames = [
   ['u-1', 'Break Room to Lounge', 'Common Area', 'Admin Inox', true, false],
   ['u-2', 'Break Room to Warehouse', 'Warehouse', 'Admin Inox', true, false],
@@ -72,6 +74,8 @@ const unitNames = [
   ['u-14', 'Office 4 - ISTH', 'Office', 'Admin Inox', true, false],
 ];
 
+// Unit IDs are stable and should be used for routing and dedupe. Display names can change freely.
+// Unit ID 是稳定标识，用于路由和去重；展示名称可以按 UI 需要调整。
 export const units = unitNames.map(([id, name, tag, owner, occupied, publicUnit], index) => ({
   id,
   propertyId: 'p-1',
@@ -87,6 +91,8 @@ export const units = unitNames.map(([id, name, tag, owner, occupied, publicUnit]
   photo: `https://picsum.photos/seed/inox-unit-${index}/80/80`,
 }));
 
+// Devices belong to the selected property and reference units through unitId, matching the expected future API shape.
+// Device 属于当前物业，并通过 unitId 关联 Unit，便于后续替换成真实 API 数据。
 export const devices = [
   ['d-1', 'ISGK-B750 7', 'Smart Lock', 'Warehouse Office 2', '97%', 'online'],
   ['d-2', 'Lock - Office to Warehouse', 'Smart Lock', 'Office to Warehouse', '31%', 'offline'],
@@ -115,6 +121,8 @@ export const devices = [
   recurringSchedule: index % 5 === 0,
 }));
 
+// Users dedupe by email in product logic, but still keep unique IDs for routing and table keys.
+// Users 业务上按 email 去重，但仍保留唯一 ID 以支持路由和表格 key。
 export const users = [
   ['usr-1', 'Brian', 'Woodward', 'brian@anchorsl.com', 'Inactive', 'Unspecified'],
   ['usr-2', 'Joseph', 'Goodson', 'joseph.goodson@unisonhardware.com', 'Active', 'Male'],
@@ -140,6 +148,8 @@ export const users = [
   tag2: '',
 }));
 
+// Credentials cover passcodes and RFID-like keys. cardId is used for RFID/Fingerprint/Face ID uniqueness; passcode uses name.
+// Credentials 覆盖密码和 RFID 类凭证：RFID/指纹/面容按 cardId 去重，Passcode 按 name 去重。
 export const credentials = [
   ['c-1', 'passcode', 'Ayden Deng@7320', '', 'System-Generated Passcode', 'Effective'],
   ['c-2', 'passcode', 'Ayden Deng@5372', '', 'User-Defined Passcode', 'Effective'],
@@ -164,6 +174,8 @@ export const credentials = [
   addedOn: '2026-04-25 03:11 PM',
 }));
 
+// Occupancy transactions are intentionally separate from units/users so Move-In and Move-Out can be audited historically.
+// 入住记录独立于 Unit/User，方便后续保留 Move-In / Move-Out 的历史审计记录。
 export const occupancyTransactions = Array.from({ length: 14 }, (_, index) => ({
   id: `occ-${index + 1}`,
   transactionId: 45205 - index * 13,

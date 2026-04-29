@@ -33,6 +33,8 @@ export function GrantAccessPage() {
   const selectedUser = users.find((user) => user.id === selectedUserId) ?? users[0];
   const selectedUnit = units.find((unit) => unit.id === selectedUnitId) ?? units[0];
   const availableDevices = useMemo(() => {
+    // Devices are scoped by selected unit; fallback rows keep the demo usable when mock data is sparse.
+    // 设备按所选 Unit 过滤；当 mock 数据不足时使用备用设备，保证 demo 始终可操作。
     const unitDevices = devices.filter((device) => device.unitId === selectedUnit.id);
     return unitDevices.length ? unitDevices : devices.slice(0, 4);
   }, [selectedUnit]);
@@ -59,6 +61,8 @@ export function GrantAccessPage() {
       </div>
 
       <div className="credential-tabs">
+        {/* Credential tabs reuse the same form shell; only credential-specific fields change below. */}
+        {/* 凭证 tab 共用同一个表单外壳，下面仅切换不同凭证类型的专属字段。 */}
         {credentialTabs.map((tab) => (
           <button key={tab.id} className={credentialType === tab.id ? 'is-active' : ''} onClick={() => setCredentialType(tab.id)}>
             {t(tab.label)}
@@ -67,6 +71,8 @@ export function GrantAccessPage() {
       </div>
 
       <div className="grant-layout">
+        {/* Three-card layout mirrors production: user/unit, credential details, then date/schedule rules. */}
+        {/* 三卡片布局贴近线上结构：用户/单元、凭证详情、日期与计划规则。 */}
         <section className="grant-card">
           <h2>{t('User')}</h2>
           <label className="field"><span>{t('User Email Address')}</span>
@@ -116,6 +122,8 @@ export function GrantAccessPage() {
       </div>
 
       <section className="grant-card grant-card--wide">
+        {/* Device assignment is separated from credential fields so future API data can be loaded independently. */}
+        {/* 设备分配区与凭证字段解耦，方便后续单独接入设备查询 API。 */}
         <div className="grant-card-header">
           <h2>{t('Assigned Devices')}</h2>
           <div>
@@ -180,6 +188,8 @@ export function GrantAccessPage() {
 
 function PasscodeFields() {
   const { t } = useI18n();
+  // Passcode naming is editable in the demo because production dedupes passcodes by name within a property.
+  // Demo 中允许编辑 Passcode Name，因为线上 Passcode 按物业内的名称去重。
   return (
     <>
       <div className="radio-row">
@@ -198,6 +208,8 @@ function PasscodeFields() {
 
 function RfidFields() {
   const { t } = useI18n();
+  // RFID-like credentials dedupe by Card ID, so card ID stays visible beside card name.
+  // RFID 类凭证按 Card ID 去重，因此 Card ID 与 Card Name 并列展示。
   return (
     <>
       <div className="radio-stack">
@@ -213,6 +225,8 @@ function RfidFields() {
 
 function BiometricFields({ label }) {
   const { t } = useI18n();
+  // Biometric enrollment is not implemented; this keeps the assignment structure visible for product review.
+  // Demo 不做真实生物识别录入，只保留授权配置结构供产品与研发评审。
   return (
     <>
       <label className="field"><span>{t(label)} {t('Name')}</span><input defaultValue={`Ayden ${label}`} /></label>

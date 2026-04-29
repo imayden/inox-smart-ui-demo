@@ -9,6 +9,8 @@ import { MoveInPage } from '../features/MoveInPage.jsx';
 import { GrantAccessPage } from '../features/GrantAccessPage.jsx';
 import { MODULE_IDS } from '../config/navigation.config.js';
 
+// App is the top-level route map. Add new product modules here only after adding navigation config and page components.
+// App 是项目最高层路由表。新增产品模块时，建议先补 navigation config 和页面组件，再在这里挂载路由。
 // URL owns version/property/module identity; the store shares that context across shell and pages.
 // URL 负责表达 demo 版本、当前物业和当前模块；全局 store 负责让导航、侧栏和页面共享这些上下文。
 function ScopedDemoRoutes() {
@@ -22,6 +24,8 @@ function ScopedDemoRoutes() {
   return (
     <ProductShell>
       <Routes>
+        {/* Keep business routes under /demo/:uiVersion/property/:propertyId so Netlify refreshes and deep links work consistently. */}
+        {/* 业务路由统一放在 /demo/:uiVersion/property/:propertyId 下，保证 Netlify 刷新和深链接都能稳定回到同一页面。 */}
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="properties" element={<EntityListPage moduleId={MODULE_IDS.properties} />} />

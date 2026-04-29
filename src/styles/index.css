@@ -1,7 +1,11 @@
+/* Global stylesheet entry. Keep import order as tokens -> layout -> components so variables are available everywhere. */
+/* 全局样式入口。请保持 tokens -> layout -> components 的导入顺序，确保变量先于组件样式生效。 */
 @import './tokens.css';
 @import './layout.css';
 @import './components.css';
 
+/* Demo-wide reset: intentionally small, so production teams can replace it with their own CSS baseline later. */
+/* Demo 级基础 reset：保持克制，方便后续研发团队替换为正式项目的 CSS baseline。 */
 * {
   box-sizing: border-box;
 }

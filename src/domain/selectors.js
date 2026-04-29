@@ -28,6 +28,8 @@ export function getModuleRows(moduleId, propertyId, subTab = '') {
     case 'users':
       return users.filter((user) => user.propertyIds.includes(propertyId));
     case 'access':
+      // subTab controls Passcodes / RFIDs / Fingerprint / Face ID filtering without adding extra routes.
+      // subTab 用于过滤 Passcodes / RFIDs / Fingerprint / Face ID，避免为每个二级 Tab 增加新路由。
       return credentials.filter((credential) => {
         if (!subTab) return credential.propertyId === propertyId;
         return credential.propertyId === propertyId && credential.credentialType === subTab;
@@ -42,6 +44,8 @@ export function getModuleRows(moduleId, propertyId, subTab = '') {
 }
 
 export function getEntity(moduleId, entityId) {
+  // Detail pages use a single lookup helper so new entity types only need to register their source here.
+  // 详情页共用这一处查找逻辑；新增实体类型时只需要在这里注册数据源。
   const sources = {
     properties,
     units,

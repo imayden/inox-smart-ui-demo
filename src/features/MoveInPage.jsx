@@ -99,6 +99,8 @@ export function MoveInPage() {
   const selectedUnits = useMemo(() => units.filter((unit) => selectedUnitIds.includes(unit.id)), [selectedUnitIds]);
 
   const selectedUnitDevices = useMemo(() => {
+    // Build the unit -> devices map once so the review table and result table share the same assignment source.
+    // 先生成 Unit -> Devices 映射，让右侧复核表和提交结果页使用同一份授权来源。
     const map = new Map();
     selectedUnits.forEach((unit) => {
       const linkedDevices = devices.filter((device) => device.unitId === unit.id);
@@ -108,12 +110,16 @@ export function MoveInPage() {
   }, [selectedUnits]);
 
   const groupedAssignments = useMemo(() => selectedUsers.map((user) => ({
+    // Each selected user receives the selected units and all devices attached to those units.
+    // 每个被选用户都会获得已选 Unit，以及这些 Unit 关联的全部设备。
     user,
     units: selectedUnits,
     devices: selectedUnits.flatMap((unit) => selectedUnitDevices.get(unit.id) ?? []),
   })), [selectedUnitDevices, selectedUnits, selectedUsers]);
 
   const resultRows = useMemo(() => groupedAssignments.flatMap((group, groupIndex) => (
+    // Flatten grouped assignments into transaction rows to mimic the production processing screen.
+    // 将用户分组授权压平成交易记录行，用于模拟线上提交后的处理页。
     group.units.flatMap((unit, unitIndex) => {
       const linkedDevices = selectedUnitDevices.get(unit.id) ?? [];
       return linkedDevices.map((device, deviceIndex) => ({
@@ -138,12 +144,16 @@ export function MoveInPage() {
   };
 
   const toggleAllUsers = () => {
+    // Select-all only applies to the currently filtered list, matching common SaaS table behavior.
+    // 全选只作用于当前筛选后的可见用户，符合常见 SaaS 表格操作逻辑。
     const visibleIds = filteredUsers.map((user) => user.id);
     const allVisibleSelected = visibleIds.every((id) => selectedUserIds.includes(id));
     setSelectedUserIds(allVisibleSelected ? selectedUserIds.filter((id) => !visibleIds.includes(id)) : [...new Set([...selectedUserIds, ...visibleIds])]);
   };
 
   const toggleAllUnits = () => {
+    // Unit select-all follows the same visible-list rule, so filters never mutate hidden rows unexpectedly.
+    // Unit 全选同样只影响可见列表，避免筛选后误改隐藏行。
     const visibleIds = filteredUnits.map((unit) => unit.id);
     const allVisibleSelected = visibleIds.every((id) => selectedUnitIds.includes(id));
     setSelectedUnitIds(allVisibleSelected ? selectedUnitIds.filter((id) => !visibleIds.includes(id)) : [...new Set([...selectedUnitIds, ...visibleIds])]);
@@ -163,6 +173,8 @@ export function MoveInPage() {
   };
 
   if (submitted) {
+    // Submitted state intentionally becomes a read-only processing table, matching the uploaded production recording.
+    // 提交后切换为只读处理表格，贴近用户上传录屏中的线上结果页。
     return (
       <section className="move-in-page move-in-page--result">
         <div className="breadcrumb">◂ {t('Batch Move-In')}</div>
@@ -213,6 +225,8 @@ export function MoveInPage() {
       <h1>{t('Move-In')}</h1>
 
       <div className="move-in-config">
+        {/* Top configuration area: date/access/role/permission/schedule are independent blocks for responsive rearrangement. */}
+        {/* 顶部配置区：日期、访问方式、角色、权限、计划访问相互独立，便于响应式重排。 */}
         <div className="move-in-stack move-in-stack--primary">
           <Panel step="1" title="Move-In Date & Time">
             <div className="move-date-grid">
@@ -322,6 +336,8 @@ export function MoveInPage() {
       </div>
 
       <div className="move-in-selectors">
+        {/* Bottom selector area: users + units generate the assignment summary on the right. */}
+        {/* 底部选择区：左侧用户与中间 Unit 的选择结果，会实时生成右侧授权摘要。 */}
         <SelectorPanel
           title="Show Inactive Users Only"
           checked={showInactiveOnly}
@@ -405,6 +421,8 @@ export function MoveInPage() {
 
 function Panel({ step, title, children, compact = false, className = '' }) {
   const { t } = useI18n();
+  // Section wrapper for the numbered Move-In cards; keep content children flexible for v2/v3.
+  // Move-In 编号卡片容器；children 保持开放，方便 v2/v3 改布局但复用逻辑。
   return (
     <section className={`move-panel ${compact ? 'move-panel--compact' : ''} ${className}`}>
       <h2>{step && <span className="step-badge">{step}</span>}{t(title)}</h2>
@@ -471,6 +489,8 @@ function AccessRow({ label, checked, onChange, children }) {
 
 function SelectorPanel({ title, checked, onToggle, extraLabel, extraChecked, onExtraToggle, search, setSearch, canContinue, children }) {
   const { t } = useI18n();
+  // Shared picker shell for Users and Units; actions stay local while table content is injected.
+  // 用户与 Unit 选择器共用外壳；搜索/开关在外层，表格内容由 children 注入。
   return (
     <section className="selector-panel">
       <div className="selector-header">
@@ -507,6 +527,8 @@ function MiniTable({ headers, children, selectable = true, onToggleAll }) {
 }
 
 function ChipStack({ items, getLabel, onRemove, maxCollapsed = 3 }) {
+  // Collapse long unit/device lists to protect table width; expanded rows can pass a larger maxCollapsed value.
+  // 长 Unit/Device 列表默认折叠，避免撑破表格；展开行可传入更大的 maxCollapsed。
   const visibleItems = items.slice(0, maxCollapsed);
   const hiddenCount = Math.max(items.length - visibleItems.length, 0);
   return (

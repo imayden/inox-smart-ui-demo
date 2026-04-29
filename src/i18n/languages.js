@@ -12,6 +12,8 @@ export const languageOptions = [
   { id: LANGUAGE_IDS.zh, label: '中文' },
 ];
 
+// Add new system UI text here with the English display string as the object key.
+// 新增系统 UI 文案时，请用英文显示文案作为 key，并补齐 es / zh；用户自定义名称不需要放入这里。
 export const uiText = {
   'Action': { es: 'Acción', zh: '操作' },
   '4 Digits': { es: '4 dígitos', zh: '4 位' },

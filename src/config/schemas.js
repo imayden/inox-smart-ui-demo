@@ -1,5 +1,7 @@
 // Page schema layer: filters, table columns and tabs are configured here for easy extension.
 // 页面配置层：搜索表单、表格列、Tab 都走 schema，后续新增字段或版本差异时优先改配置。
+// Extension rule: add fields here first, then make sure mockData rows contain matching keys.
+// 扩展规则：优先在这里新增字段，再确保 mockData 的 rows 里有对应 key。
 export const filterSchemas = {
   properties: [
     { key: 'name', label: 'Property Name', type: 'text', placeholder: 'Property Name' },
@@ -59,6 +61,8 @@ export const filterSchemas = {
   ],
 };
 
+// Table column type controls DataTable renderCell behavior in components/ui.jsx.
+// 表格列的 type 会交给 components/ui.jsx 里的 renderCell 决定具体视觉呈现。
 export const tableSchemas = {
   properties: [
     { key: 'image', label: '', type: 'image' },
@@ -144,6 +148,8 @@ export const tableSchemas = {
   ],
 };
 
+// Tabs are separated from pages so each module can add, remove or rename secondary views without touching route code.
+// Tab 配置独立于页面，方便每个模块新增、删除或改名二级视图，而不用修改路由。
 export const tabSchemas = {
   devices: [
     { id: '', label: 'All Devices' },

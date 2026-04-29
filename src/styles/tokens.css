@@ -1,3 +1,5 @@
+/* Design tokens for v1.0. Most layout/component files consume these variables instead of hard-coded colors/sizes. */
+/* v1.0 设计变量。多数布局与组件样式都读取这些变量，避免在各处硬编码颜色和尺寸。 */
 :root {
   --color-brand: #8cc653;
   --color-brand-dark: #79b63e;
@@ -23,6 +25,8 @@
   --shadow-modal: 0 18px 60px rgba(0, 0, 0, 0.28);
 }
 
+/* UI version themes. Future v2/v3 visual experiments can override variables here before touching component CSS. */
+/* UI 版本主题。未来 v2/v3 的视觉实验优先在这里覆盖变量，再考虑改组件 CSS。 */
 .theme-v2 {
   --color-brand: #6aa8ff;
   --color-brand-dark: #3a83ef;

@@ -12,6 +12,8 @@ import {
 import { applyPropertyImageFallback } from '../domain/imageFallbacks.js';
 import { useI18n } from '../i18n/useI18n.js';
 
+// Shared UI primitives used by all feature pages. Keep business rules out of this file; pass behavior through props.
+// 全局基础 UI 组件放在这里。这里不要写业务规则，业务动作通过 props 从页面传入。
 // Base button: all versions share behavior, while visual style can be themed by CSS variables.
 // 基础按钮：所有版本共用行为，视觉样式通过 CSS 变量按 v1/v2/v3 覆盖。
 export function Button({ children, variant = 'primary', className = '', ...props }) {
@@ -31,6 +33,8 @@ export function PageHeader({ title, property, action, onAction }) {
         {property && <span className="page-header__property">● {property.name}</span>}
       </div>
       <div className="page-header__actions">
+        {/* Header action slots intentionally stay generic; feature pages decide whether the button means Add, Grant Access, or Move-In. */}
+        {/* 页头操作区保持通用，具体按钮代表 Add、Grant Access 还是 Move-In，由业务页面决定。 */}
         <button className="icon-only" aria-label={t('Export')}><Download size={22} /></button>
         {action && <Button onClick={onAction}>{t(action)}</Button>}
         <Button variant="muted">{t('Action')} <ChevronDown size={16} /></Button>
@@ -109,6 +113,8 @@ export function DataTable({ columns = [], rows = [], onEdit, onDelete, onRowClic
           </tr>
         </thead>
         <tbody>
+          {/* DataTable is schema-driven: columns decide each cell's renderer, rows only provide data. */}
+          {/* DataTable 由 schema 驱动：columns 决定单元格渲染方式，rows 只负责提供数据。 */}
           {rows.map((row) => (
             <tr
               key={row.id}

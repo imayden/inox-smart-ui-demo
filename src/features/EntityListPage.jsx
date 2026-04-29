@@ -70,6 +70,8 @@ export function EntityListPage({ moduleId }) {
   if (moduleId === 'properties') {
     return (
       <section className="module-page properties-page">
+        {/* Properties has a dedicated grid/list header because it is both a global module and the property switcher source. */}
+        {/* Properties 需要独立的宫格/列表页头，因为它既是全局模块，也是物业切换数据来源。 */}
         <PropertiesHeader
           view={propertyView}
           setView={setPropertyView}
@@ -124,6 +126,8 @@ function PropertiesHeader({ view, setView, filterOpen, setFilterOpen, visibleCol
   const allVisible = propertyColumns.every((column) => visibleColumns.includes(column.key));
 
   const toggleColumn = (key) => {
+    // Column visibility is local UI state only; tableSchemas remains the canonical column definition.
+    // 列显示状态只是当前页面状态；tableSchemas 仍是正式的列定义来源。
     setVisibleColumns((current) => current.includes(key) ? current.filter((item) => item !== key) : [...current, key]);
   };
 
@@ -160,6 +164,8 @@ function PropertyCardGrid({ rows, onOpen, onEdit }) {
   const { t } = useI18n();
   return (
     <div className="property-card-grid">
+      {/* Whole card opens property details; inner action buttons stop propagation to keep their own actions. */}
+      {/* 整张卡片点击进入详情；内部按钮会阻止冒泡，避免误触详情跳转。 */}
       {rows.map((row) => (
         <article className="property-card" key={row.id} onClick={() => onOpen(row)}>
           <img src={row.image} alt={row.name} onError={applyPropertyImageFallback} />
@@ -178,6 +184,8 @@ function PropertyCardGrid({ rows, onOpen, onEdit }) {
 
 function PropertyEditorMock({ row, onClose }) {
   const { t } = useI18n();
+  // This mock editor documents the expected property fields without persisting data yet.
+  // 这个模拟编辑器用于展示物业字段结构，当前暂不做数据持久化。
   return (
     <div className="modal-form property-editor">
       <div className="unit-photo-box">

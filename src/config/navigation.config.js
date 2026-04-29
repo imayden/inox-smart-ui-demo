@@ -25,6 +25,8 @@ export const MODULE_IDS = {
   security: 'security',
 };
 
+// Each nav item maps one top-level SaaS module to one route segment and optional icon.
+// 每个导航项把一个顶部核心模块映射到一个路由片段和可选图标。
 export const topNavigation = [
   { id: MODULE_IDS.dashboard, label: 'Dashboard', path: 'dashboard', icon: Gauge },
   { id: MODULE_IDS.properties, label: 'Properties', path: 'properties', icon: Building2 },
@@ -37,6 +39,8 @@ export const topNavigation = [
   { id: MODULE_IDS.security, label: 'Security', path: 'security', icon: ShieldAlert },
 ];
 
+// moduleMeta controls page titles and default header CTA labels for schema-based list pages.
+// moduleMeta 控制通用列表页的标题和默认页头 CTA 文案。
 export const moduleMeta = {
   dashboard: { title: 'Dashboard' },
   properties: { title: 'Properties', action: '+ Add Property' },

@@ -14,6 +14,8 @@ export function LanguageMenu({ variant = 'dark' }) {
   const menuRef = useRef(null);
 
   useEffect(() => {
+    // Close the dropdown when users click outside so the menu behaves like production SaaS navigation.
+    // 点击菜单外部时自动关闭，复刻生产 SaaS 顶栏下拉菜单的常见行为。
     const closeOnOutsideClick = (event) => {
       if (!menuRef.current?.contains(event.target)) setIsOpen(false);
     };
@@ -41,6 +43,8 @@ export function LanguageMenu({ variant = 'dark' }) {
               type="button"
               role="menuitem"
               onClick={() => {
+                // Language is stored globally and persisted in localStorage by demoStore.
+                // 语言写入全局状态，并由 demoStore 同步到 localStorage。
                 setLanguage(option.id);
                 setIsOpen(false);
               }}

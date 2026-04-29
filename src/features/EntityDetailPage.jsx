@@ -89,6 +89,8 @@ function UnitDetail({ entity, propertyId }) {
   const uiVersion = useDemoStore((state) => state.uiVersion);
   const [activeTab, setActiveTab] = useState('users');
   const [activeUserTab, setActiveUserTab] = useState('all');
+  // The production Unit Detail page mixes live user/unit relationships with nested tabs; mock rows preserve that shape.
+  // 线上 Unit Detail 同时承载用户-单元关系和多层 tab；这里用 mock rows 保留相同信息结构。
   const userRows = getModuleRows('users', propertyId).slice(0, 8).map((user, index) => ({
     ...user,
     role: index === 0 ? 'Owner' : index % 3 === 0 ? 'Administrator' : index % 2 === 0 ? 'Member' : 'Guest',
@@ -98,11 +100,15 @@ function UnitDetail({ entity, propertyId }) {
     status: 'Moved-In',
   }));
   const visibleUserRows = useMemo(() => {
+    // Inner user tabs filter the same unit-user relationship table instead of changing route.
+    // 内层用户 tab 只筛选同一张 Unit-User 关系表，不改变路由。
     if (activeUserTab === 'all') return userRows;
     if (activeUserTab === 'pending' || activeUserTab === 'accessible') return [];
     return userRows.filter((row) => row.role.toLowerCase() === activeUserTab);
   }, [activeUserTab, userRows]);
   const unitDevices = devices.filter((device) => device.unitId === entity.id);
+  // Related tables derive from the unit identity first and fall back to demo samples when no exact match exists.
+  // 关联表优先按 Unit 身份过滤；没有精确 mock 数据时回退到示例数据，避免空白页面影响评审。
   const unitCredentials = credentials.filter((credential) => credential.unitNumber === entity.unitNumber || credential.unitNumber.includes(entity.name)).slice(0, 8);
   const unitAudits = auditEvents.filter((event) => event.unitNumber === entity.unitNumber || event.unitNumber.includes(entity.name)).slice(0, 8);
   const unitOccupancy = occupancyTransactions.filter((item) => item.unitId === entity.id || item.unitNumber === entity.unitNumber).slice(0, 8);
@@ -171,6 +177,8 @@ function UnitDetail({ entity, propertyId }) {
 
 function UnitUsersTable({ rows }) {
   const { t } = useI18n();
+  // Unit user table is custom because it has nested role/status columns not shared with the generic DataTable schema.
+  // Unit 用户表为定制表格，因为它包含通用 DataTable schema 没有的角色与入住状态列。
   return (
     <div className="table-wrap">
       <table className="data-table">

@@ -12,6 +12,8 @@ const authStatuses = [
   { value: 'loggedOut', label: 'Logged Out' },
 ];
 
+// DemoControlBar gives reviewers a no-code way to switch UI version, login state, property, role and mock data mode.
+// DemoControlBar 让评审人员无需改代码即可切换 UI 版本、登录态、物业、角色和模拟数据状态。
 export function DemoControlBar() {
   const { t } = useI18n();
   const navigate = useNavigate();
@@ -50,6 +52,8 @@ export function DemoControlBar() {
         <div className="demo-control__fields">
           <label>
             {t('UI Version')}
+            {/* Version switching updates the URL so a copied link always reopens the same UI shell. */}
+            {/* 切换版本时同步更新 URL，复制链接后仍能打开同一个 UI 外壳版本。 */}
             <select value={uiVersion} onChange={(event) => updateRoutePart(event.target.value, propertyId)}>
               {uiVersions.map((version) => (
                 <option key={version} value={version}>{version.toUpperCase()}</option>
@@ -58,6 +62,8 @@ export function DemoControlBar() {
           </label>
           <label>
             {t('Login')}
+            {/* Login status is local demo state; it does not call an API. */}
+            {/* 登录态只是本地 demo 状态，不会调用后端接口。 */}
             <select value={authStatus} onChange={(event) => setAuthStatus(event.target.value)}>
               {authStatuses.map((option) => (
                 <option key={option.value} value={option.value}>{t(option.label)}</option>

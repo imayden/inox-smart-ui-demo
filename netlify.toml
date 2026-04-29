@@ -1,12 +1,16 @@
 [build]
+  # Netlify production build. / Netlify 生产构建配置。
   command = "npm run build"
   publish = "dist"
 
 [dev]
+  # Local Netlify dev parity with Vite. / 本地 Netlify dev 与 Vite 端口保持一致。
   command = "npm run dev"
   port = 5173
 
 [[redirects]]
+  # SPA fallback so deep routes such as /demo/v1/property/p-1/units/u-1 work after refresh.
+  # 单页应用回退规则，确保刷新 /demo/v1/property/p-1/units/u-1 等深层路由不会 404。
   from = "/*"
   to = "/index.html"
   status = 200
