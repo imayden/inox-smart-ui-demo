@@ -763,6 +763,17 @@
   gap: 10px;
 }
 
+.move-date-main > .switch-row {
+  /* Keep Permanent Stay switch close to its label instead of stretching to the card edge. */
+  /* 让 Permanent Stay 开关靠近文本，不随卡片宽度被拉到最右侧。 */
+  justify-content: flex-start;
+  gap: 24px;
+}
+
+.move-date-main > .switch-row > span:first-child {
+  min-width: 142px;
+}
+
 .move-panel {
   /* Floating controls inside Move-In must escape the card boundary. */
   /* Move-In 内部的浮层控件需要突破卡片边界显示。 */
@@ -1848,6 +1859,18 @@
 
   .property-card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .move-date-grid {
+    /* In two-column demo layouts the first Move-In card can become narrow; stack Main Resident below Permanent Stay to avoid overlap. */
+    /* 双列 demo 布局下 Move-In 第一个卡片会变窄，此时让 Main Resident 自动换行，避免和开关穿模。 */
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .move-date-grid > .switch-row {
+    justify-content: flex-start;
+    gap: 24px;
   }
 }
 
