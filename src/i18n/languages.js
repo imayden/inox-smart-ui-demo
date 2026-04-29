@@ -14,6 +14,9 @@ export const languageOptions = [
 
 export const uiText = {
   'Action': { es: 'Acción', zh: '操作' },
+  '4 Digits': { es: '4 dígitos', zh: '4 位' },
+  '6 Digits': { es: '6 dígitos', zh: '6 位' },
+  '8 Digits': { es: '8 dígitos', zh: '8 位' },
   'Add a Passcode': { es: 'Agregar código de acceso', zh: '添加密码' },
   'Add an RFID': { es: 'Agregar RFID', zh: '添加 RFID' },
   'Access': { es: 'Acceso', zh: '门禁' },
@@ -31,6 +34,7 @@ export const uiText = {
   'Administrator': { es: 'Administrador', zh: '管理员' },
   'Agree to': { es: 'Aceptar', zh: '同意' },
   'All Devices': { es: 'Todos los dispositivos', zh: '全部设备' },
+  'ALL': { es: 'TODOS', zh: '全部' },
   'All Properties': { es: 'Todas las propiedades', zh: '全部物业' },
   'Assigned Devices': { es: 'Dispositivos asignados', zh: '已分配设备' },
   'Assign Access to Linked Public Units': { es: 'Asignar acceso a unidades públicas vinculadas', zh: '为关联公共单元分配访问权限' },
