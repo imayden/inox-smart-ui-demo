@@ -5,6 +5,7 @@ import { Button, DataTable, Modal, PageHeader, SearchPanel, Tabs } from '../comp
 import { moduleMeta } from '../config/navigation.config.js';
 import { filterSchemas, tableSchemas, tabSchemas } from '../config/schemas.js';
 import { useDemoStore } from '../demo/demoStore.js';
+import { applyPropertyImageFallback, PROPERTY_IMAGE_FALLBACK } from '../domain/imageFallbacks.js';
 import { getModuleRows, getProperty } from '../domain/selectors.js';
 import { useI18n } from '../i18n/useI18n.js';
 
@@ -161,7 +162,7 @@ function PropertyCardGrid({ rows, onOpen, onEdit }) {
     <div className="property-card-grid">
       {rows.map((row) => (
         <article className="property-card" key={row.id} onClick={() => onOpen(row)}>
-          <img src={row.image} alt={row.name} />
+          <img src={row.image} alt={row.name} onError={applyPropertyImageFallback} />
           <h2>{row.name}</h2>
           <p>{row.address} · {row.country}</p>
           <div className="property-card__actions" onClick={(event) => event.stopPropagation()}>
@@ -181,7 +182,7 @@ function PropertyEditorMock({ row, onClose }) {
     <div className="modal-form property-editor">
       <div className="unit-photo-box">
         <label>* {t('Photo')}</label>
-        <img src={row.image || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=520&q=80'} alt="" />
+        <img src={row.image || PROPERTY_IMAGE_FALLBACK} alt="" onError={applyPropertyImageFallback} />
         <small>{t('File Format')}: .jpg .jpeg .png</small>
       </div>
       <label className="field"><span>{t('Property ID')}</span><input value={row.id || ''} readOnly /></label>

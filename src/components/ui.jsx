@@ -9,6 +9,7 @@ import {
   Wifi,
   WifiOff,
 } from 'lucide-react';
+import { applyPropertyImageFallback } from '../domain/imageFallbacks.js';
 import { useI18n } from '../i18n/useI18n.js';
 
 // Base button: all versions share behavior, while visual style can be themed by CSS variables.
@@ -34,7 +35,7 @@ export function PageHeader({ title, property, action, onAction }) {
         {action && <Button onClick={onAction}>{t(action)}</Button>}
         <Button variant="muted">{t('Action')} <ChevronDown size={16} /></Button>
         <Button variant="muted"><Filter size={18} /> {t('Filter')} <ChevronDown size={16} /></Button>
-        {property?.image && <img className="property-thumb" src={property.image} alt={property.name} />}
+        {property?.image && <img className="property-thumb" src={property.image} alt={property.name} onError={applyPropertyImageFallback} />}
       </div>
     </header>
   );
@@ -142,7 +143,7 @@ function renderCell(row, column, t) {
   // 表格单元格按 column.type 渲染不同 UI，后续新增类型时只扩展这里。
   const value = row[column.key];
   if (column.type === 'image') {
-    return value ? <img className="table-image" src={value} alt="" /> : null;
+    return value ? <img className="table-image" src={value} alt="" onError={applyPropertyImageFallback} /> : null;
   }
   if (column.type === 'checkbox') {
     return <span className={`fake-check ${value ? 'is-checked' : ''}`} />;

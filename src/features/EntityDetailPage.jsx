@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, DataTable, FormGrid, Tabs } from '../components/ui.jsx';
 import { tableSchemas } from '../config/schemas.js';
+import { applyPropertyImageFallback } from '../domain/imageFallbacks.js';
 import { auditEvents, credentials, devices, occupancyTransactions } from '../domain/mockData.js';
 import { getEntity, getModuleRows } from '../domain/selectors.js';
 import { useDemoStore } from '../demo/demoStore.js';
@@ -45,7 +46,7 @@ function PropertyDetail({ entity }) {
             ]}
           />
         </div>
-        <img src={entity.image} alt={entity.name} />
+        <img src={entity.image} alt={entity.name} onError={applyPropertyImageFallback} />
       </div>
     </section>
   );

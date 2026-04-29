@@ -52,7 +52,7 @@ export const properties = [
   { id: 'p-5', name: 'INOX Entry & Exit', image: 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=520&q=80', address: '6 Wayne Ct.', city: 'Sacramento', state: 'California', zipCode: '95829', country: 'United States of America', owner: 'Admin Inox', timeZone: 'America/Los_Angeles' },
   { id: 'p-6', name: 'Kajabi Property 1', image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=520&q=80', address: '6 Wayne Ct.', city: 'Sacramento', state: 'California', zipCode: '95829', country: 'United States of America', owner: 'Admin Inox', timeZone: 'America/Los_Angeles' },
   { id: 'p-7', name: "Kajabi's Property 2", image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=520&q=80', address: '6 Wayne Ct.', city: 'Sacramento', state: 'California', zipCode: '95829', country: 'United States of America', owner: 'Admin Inox', timeZone: 'America/Los_Angeles' },
-  { id: 'p-8', name: "Travis' Property", image: 'https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4?auto=format&fit=crop&w=520&q=80', address: '4000 Marconi Ave', city: 'Sacramento', state: 'California', zipCode: '95821', country: 'United States of America', owner: 'Travis Admin', timeZone: 'America/Los_Angeles' },
+  { id: 'p-8', name: "Travis' Property", image: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=520&q=80', address: '4000 Marconi Ave', city: 'Sacramento', state: 'California', zipCode: '95821', country: 'United States of America', owner: 'Travis Admin', timeZone: 'America/Los_Angeles' },
 ];
 
 const unitNames = [

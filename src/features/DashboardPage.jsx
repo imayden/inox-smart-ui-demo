@@ -2,6 +2,7 @@ import { Building2, DoorOpen, KeyRound, ShieldAlert } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui.jsx';
 import { useDemoStore } from '../demo/demoStore.js';
+import { applyPropertyImageFallback } from '../domain/imageFallbacks.js';
 import { getProperty, getStats } from '../domain/selectors.js';
 import { useI18n } from '../i18n/useI18n.js';
 
@@ -56,7 +57,7 @@ export function DashboardPage() {
           <h2><Building2 /> {t('Property Overview')}</h2>
           <div><span>{t('Total Units Occupied')}</span><b>{stats.occupied}</b></div>
           <div><span>{t('Total Units Vacant')}</span><b>{stats.vacant}</b></div>
-          <img src={property.image} alt={property.name} />
+          <img src={property.image} alt={property.name} onError={applyPropertyImageFallback} />
         </article>
         <article className="dashboard-card quick-search-card">
           <h2><DoorOpen /> {t('Quick Search')}</h2>
