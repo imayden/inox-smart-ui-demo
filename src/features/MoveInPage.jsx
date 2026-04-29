@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { ChevronDown, ChevronRight, Search, Trash2, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { CalendarDays, ChevronDown, ChevronRight, Search, Trash2, X } from 'lucide-react';
 import { Button } from '../components/ui.jsx';
 import { devices, units, users } from '../domain/mockData.js';
 import { useI18n } from '../i18n/useI18n.js';
@@ -7,10 +7,11 @@ import { useI18n } from '../i18n/useI18n.js';
 const rolePermissionPresets = {
   Admin: {
     permissions: {
-      manageMembers: 'Full',
-      manageGuests: 'Full',
+      manageAdmins: 'Full',
+      manageDevices: 'Full',
       ekeys: 'Full',
       doorbell: 'Full',
+      mobileAccessType: 'On-site & Remote',
     },
     privacyLabel: 'Display Owner Info in the App',
   },
@@ -20,28 +21,46 @@ const rolePermissionPresets = {
       manageGuests: 'None',
       ekeys: 'None',
       doorbell: 'None',
+      mobileAccessType: 'On-site & Remote',
     },
     privacyLabel: 'Display Admin Info in the App',
   },
   Guest: {
     permissions: {
-      manageMembers: 'None',
       manageGuests: 'None',
-      ekeys: 'None',
       doorbell: 'None',
+      mobileAccessType: 'On-site & Remote',
     },
-    privacyLabel: 'Display Admin Info in the App',
+    privacyLabel: 'Display Member Info in the App',
   },
 };
 
-const permissionFields = [
-  ['manageMembers', 'Manage Members'],
-  ['manageGuests', 'Manage Guests'],
-  ['ekeys', 'E-Keys'],
-  ['doorbell', 'Doorbell answering'],
-];
+const permissionFieldsByRole = {
+  Admin: [
+    ['manageAdmins', 'Manage Admins', ['Full', 'Edit', 'View', 'None']],
+    ['manageDevices', 'Manage Devices', ['Full', 'Edit', 'View', 'None']],
+    ['ekeys', 'E-Keys', ['Full', 'Edit', 'View', 'None']],
+    ['doorbell', 'Doorbell answering', ['Full', 'None']],
+    ['mobileAccessType', 'Mobile Access Type', ['On-site & Remote', 'On-site Only']],
+  ],
+  Member: [
+    ['manageMembers', 'Manage Members', ['Full', 'Edit', 'View', 'None']],
+    ['manageGuests', 'Manage Guests', ['Full', 'Edit', 'View', 'None']],
+    ['ekeys', 'E-Keys', ['Full', 'Edit', 'View', 'None']],
+    ['doorbell', 'Doorbell answering', ['Full', 'None']],
+    ['mobileAccessType', 'Mobile Access Type', ['On-site & Remote', 'On-site Only']],
+  ],
+  Guest: [
+    ['manageGuests', 'Manage Guests', ['Full', 'Edit', 'View', 'None']],
+    ['doorbell', 'Doorbell answering', ['Full', 'None']],
+    ['mobileAccessType', 'Mobile Access Type', ['On-site & Remote', 'On-site Only']],
+  ],
+};
 
 const weekDays = ['ALL', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const timeHours = Array.from({ length: 12 }, (_, index) => String(index + 1).padStart(2, '0'));
+const timeMinutes = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'));
 
 // Batch Move-In is a production-like workflow: configure access rules, pick users, pick units, review generated unit-device assignments, then submit.
 // 批量 Move-In 按线上流程组织：先配置入住/权限规则，再选用户与单元，右侧生成待提交的 Unit-Device 授权清单。
@@ -56,7 +75,7 @@ export function MoveInPage() {
   const [displayRoleInfo, setDisplayRoleInfo] = useState(false);
   const [assignMode, setAssignMode] = useState('manual');
   const [linkedPublicUnits, setLinkedPublicUnits] = useState(false);
-  const [moveInAt, setMoveInAt] = useState('2026-04-29 09:48 AM');
+  const [moveInAt, setMoveInAt] = useState('2026-04-29 03:00 PM');
   const [moveOutAt, setMoveOutAt] = useState('');
   const [startTime, setStartTime] = useState('12:00 AM');
   const [endTime, setEndTime] = useState('11:59 PM');
@@ -77,6 +96,7 @@ export function MoveInPage() {
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [selectedUnitIds, setSelectedUnitIds] = useState([]);
   const [expandedSummaryUsers, setExpandedSummaryUsers] = useState([]);
+  const [expandedTreeIds, setExpandedTreeIds] = useState(['building-Main Building', 'floor-Main Building-1st Floor', 'unit-u-6']);
   const [submitted, setSubmitted] = useState(false);
 
   const filteredUsers = useMemo(() => {
@@ -91,7 +111,7 @@ export function MoveInPage() {
     const keyword = unitSearch.trim().toLowerCase();
     return units.filter((unit) => {
       const haystack = `${unit.unitNumber} ${unit.name} ${unit.tag}`.toLowerCase();
-      return (!keyword || haystack.includes(keyword)) && (!showVacantOnly || !unit.occupied) && (!showPublicUnits || unit.publicUnit);
+      return (!keyword || haystack.includes(keyword)) && (!showVacantOnly || !unit.occupied) && (showPublicUnits || !unit.publicUnit);
     });
   }, [showPublicUnits, showVacantOnly, unitSearch]);
 
@@ -137,6 +157,10 @@ export function MoveInPage() {
     // 切换角色时同步更新默认权限，复刻线上表单中 Role 与 Permission 的联动。
     setRole(nextRole);
     setPermissions(rolePermissionPresets[nextRole].permissions);
+  };
+
+  const toggleTreeNode = (nodeId) => {
+    setExpandedTreeIds((current) => current.includes(nodeId) ? current.filter((id) => id !== nodeId) : [...current, nodeId]);
   };
 
   const toggleValue = (value, list, setter) => {
@@ -235,8 +259,8 @@ export function MoveInPage() {
                   setPermanentStay(checked);
                   if (checked) setMoveOutAt('2100-12-31 11:59 PM');
                 }} />
-                <TextField label="Move-In" value={moveInAt} onChange={setMoveInAt} />
-                <TextField label="Move-Out" value={moveOutAt} onChange={setMoveOutAt} placeholder="End Date & Time" disabled={permanentStay} />
+                <DateTimeField label="Move-In" value={moveInAt} onChange={setMoveInAt} />
+                <DateTimeField label="Move-Out" value={moveOutAt} onChange={setMoveOutAt} placeholder="End Date & Time" disabled={permanentStay} />
               </div>
               <SwitchRow label="Main Resident" checked={mainResident} onChange={setMainResident} />
             </div>
@@ -245,22 +269,26 @@ export function MoveInPage() {
           <Panel step="2" title="Access">
             <AccessRow label="Mobile Access" checked={access.mobile} onChange={(checked) => setAccess((current) => ({ ...current, mobile: checked }))} />
             <AccessRow label="E-Keys" checked={access.ekey} onChange={(checked) => setAccess((current) => ({ ...current, ekey: checked }))}>
-              <select value={access.ekeyType} onChange={(event) => setAccess((current) => ({ ...current, ekeyType: event.target.value }))}>
-                <option>{t('RFID Card')}</option>
-                <option>{t('RFID FOB')}</option>
-                <option>{t('RFID Wristband')}</option>
-              </select>
+              <CustomSelect
+                className="custom-select--access"
+                value={access.ekeyType}
+                options={['RFID Card', 'RFID FOB', 'RFID Wristband']}
+                onChange={(value) => setAccess((current) => ({ ...current, ekeyType: value }))}
+              />
             </AccessRow>
             <AccessRow label="Passcode" checked={access.passcode} onChange={(checked) => setAccess((current) => ({ ...current, passcode: checked }))}>
-              <select value={access.passcodeMode} onChange={(event) => setAccess((current) => ({ ...current, passcodeMode: event.target.value }))}>
-                <option>{t('System-Gen')}</option>
-                <option>{t('User-Defined')}</option>
-              </select>
-              <select value={access.passcodeLength} onChange={(event) => setAccess((current) => ({ ...current, passcodeLength: event.target.value }))}>
-                <option>{t('4 Digits')}</option>
-                <option>{t('6 Digits')}</option>
-                <option>{t('8 Digits')}</option>
-              </select>
+              <CustomSelect
+                className="custom-select--access"
+                value={access.passcodeMode}
+                options={['System-Gen', 'User-Defined']}
+                onChange={(value) => setAccess((current) => ({ ...current, passcodeMode: value }))}
+              />
+              <CustomSelect
+                className="custom-select--access"
+                value={access.passcodeLength}
+                options={['4 Digits', '6 Digits', '8 Digits']}
+                onChange={(value) => setAccess((current) => ({ ...current, passcodeLength: value }))}
+              />
               {access.passcodeMode === 'User-Defined' && (
                 <input value={access.passcodeValue} onChange={(event) => setAccess((current) => ({ ...current, passcodeValue: event.target.value }))} placeholder="1234" />
               )}
@@ -279,16 +307,15 @@ export function MoveInPage() {
               ))}
             </Panel>
             <Panel step="4" title="Permissions" compact>
-              {permissionFields.map(([key, label]) => (
-                <SelectField
+              {permissionFieldsByRole[role].map(([key, label, options]) => (
+                <CustomSelectField
                   key={key}
                   label={label}
                   value={permissions[key]}
-                  options={['None', 'Full']}
+                  options={options}
                   onChange={(value) => setPermissions((current) => ({ ...current, [key]: value }))}
                 />
               ))}
-              <SelectField label="Mobile Access Type" value="On-site & Remote" options={['On-site & Remote', 'On-site Only']} onChange={() => {}} />
             </Panel>
           </div>
 
@@ -298,8 +325,8 @@ export function MoveInPage() {
 
           <SubSection title="Assign Units">
             <div className="radio-line">
-              <label><input type="radio" name="assignMode" checked={assignMode === 'auto'} onChange={() => setAssignMode('auto')} /> {t('Auto-Assign')}</label>
-              <label><input type="radio" name="assignMode" checked={assignMode === 'manual'} onChange={() => setAssignMode('manual')} /> {t('Manual Assign')}</label>
+              <RadioOption name="assignMode" label="Auto-Assign" checked={assignMode === 'auto'} onChange={() => setAssignMode('auto')} />
+              <RadioOption name="assignMode" label="Manual Assign" checked={assignMode === 'manual'} onChange={() => setAssignMode('manual')} />
             </div>
             <SwitchRow label="Assign Access to Linked Public Units" checked={linkedPublicUnits} onChange={setLinkedPublicUnits} />
           </SubSection>
@@ -308,8 +335,8 @@ export function MoveInPage() {
         <Panel title="Scheduled Access (Optional)" className="move-schedule-panel">
           <SwitchRow label="Recurring Schedule" checked={recurringSchedule} onChange={setRecurringSchedule} alignEnd />
           <div className="time-pair">
-            <TextField label="Start Time" value={startTime} onChange={setStartTime} />
-            <TextField label="End Time" value={endTime} onChange={setEndTime} />
+            <TimeField label="Start Time" value={startTime} onChange={setStartTime} />
+            <TimeField label="End Time" value={endTime} onChange={setEndTime} />
           </div>
           <SubSection title="Recurring Schedule">
             <div className="schedule-days">
@@ -369,15 +396,13 @@ export function MoveInPage() {
           canContinue={selectedUnitIds.length > 0}
         >
           <MiniTable headers={['Units', 'Status']} onToggleAll={toggleAllUnits}>
-            <tr className="tree-row"><td data-label={t('Select')}><input type="checkbox" onChange={toggleAllUnits} /></td><td data-label={t('Units')}>− Main Building</td><td data-label={t('Status')}> </td></tr>
-            <tr className="tree-row"><td data-label={t('Select')}><input type="checkbox" /></td><td data-label={t('Units')}>− 1st Floor</td><td data-label={t('Status')}> </td></tr>
-            {filteredUnits.map((unit) => (
-              <tr key={unit.id} className={selectedUnitIds.includes(unit.id) ? 'is-selected' : ''}>
-                <td data-label={t('Select')}><input type="checkbox" checked={selectedUnitIds.includes(unit.id)} onChange={() => toggleValue(unit.id, selectedUnitIds, setSelectedUnitIds)} /></td>
-                <td data-label={t('Units')}>+ {unit.name}</td>
-                <td data-label={t('Status')}>{unit.occupied ? t('Occupied') : t('Vacant')}</td>
-              </tr>
-            ))}
+            <UnitTreeRows
+              unitsList={filteredUnits}
+              selectedUnitIds={selectedUnitIds}
+              setSelectedUnitIds={setSelectedUnitIds}
+              expandedTreeIds={expandedTreeIds}
+              toggleTreeNode={toggleTreeNode}
+            />
           </MiniTable>
         </SelectorPanel>
 
@@ -451,15 +476,226 @@ function TextField({ label, value, onChange, placeholder, disabled = false }) {
   );
 }
 
-function SelectField({ label, value, options, onChange }) {
+function CustomSelectField({ label, value, options, onChange }) {
   const { t } = useI18n();
+
   return (
-    <label className="permission-row">
+    <div className="permission-row custom-select-row">
       <span>{t(label)}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)}>
-        {options.map((option) => <option value={option} key={option}>{t(option)}</option>)}
-      </select>
-    </label>
+      <CustomSelect value={value} options={options} onChange={onChange} />
+    </div>
+  );
+}
+
+function CustomSelect({ value, options, onChange, className = '' }) {
+  const { t } = useI18n();
+  const [isOpen, setIsOpen] = useState(false);
+  const fieldRef = useRef(null);
+
+  // Reusable custom dropdown for Move-In; used by Permissions and Access controls to avoid browser-native select UI.
+  // Move-In 可复用自定义下拉；Permissions 与 Access 共用，避免出现浏览器原生 select 样式。
+  useOutsideDismiss(fieldRef, isOpen, () => setIsOpen(false));
+
+  return (
+    <span className={`custom-select ${className}`} ref={fieldRef}>
+      <button type="button" className={isOpen ? 'is-open' : ''} onClick={() => setIsOpen((open) => !open)}>
+        {t(value)}
+        <ChevronDown size={14} />
+      </button>
+      <span className={`custom-select__menu ${isOpen ? 'is-open' : ''}`} aria-hidden={!isOpen}>
+        {options.map((option) => (
+          <button
+            type="button"
+            key={option}
+            className={value === option ? 'is-selected' : ''}
+            onClick={() => {
+              onChange(option);
+              setIsOpen(false);
+            }}
+          >
+            {t(option)}
+          </button>
+        ))}
+      </span>
+    </span>
+  );
+}
+
+function DateTimeField({ label, value, onChange, placeholder, disabled = false }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const fieldRef = useRef(null);
+
+  // The picker is visually an overlay; outside clicks close it without changing the draft value.
+  // 日期选择器按浮层处理；点击外部只关闭，不会修改未确认的草稿值。
+  useOutsideDismiss(fieldRef, open, () => setOpen(false));
+
+  // Custom date-time field mirrors the production picker instead of using the browser-native date input.
+  // 自定义日期时间字段复刻线上选择器，而不是使用浏览器原生 date input。
+  return (
+    <div className={`field move-field datetime-field ${open ? 'is-layer-open' : ''}`} ref={fieldRef}>
+      <span>{t(label)}</span>
+      <button type="button" className={open ? 'is-open' : ''} disabled={disabled} onClick={() => setOpen((current) => !current)}>
+        <span>{value || (placeholder ? t(placeholder) : '')}</span>
+        <CalendarDays size={14} />
+      </button>
+      {!disabled && (
+        <DateTimePopover
+          value={value}
+          isOpen={open}
+          onCancel={() => setOpen(false)}
+          onApply={(nextValue) => {
+            onChange(nextValue);
+            setOpen(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function TimeField({ label, value, onChange }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const fieldRef = useRef(null);
+
+  // Scheduled access uses a time-only picker with the same overlay and outside-click behavior.
+  // Scheduled Access 使用仅时间选择器，并复用浮层和点击外部关闭的交互。
+  useOutsideDismiss(fieldRef, open, () => setOpen(false));
+
+  return (
+    <div className={`field move-field time-field ${open ? 'is-layer-open' : ''}`} ref={fieldRef}>
+      <span>{t(label)}</span>
+      <button type="button" className={open ? 'is-open' : ''} onClick={() => setOpen((current) => !current)}>
+        <span>{value}</span>
+        <CalendarDays size={14} />
+      </button>
+      <TimePopover
+        value={value}
+        isOpen={open}
+        onCancel={() => setOpen(false)}
+        onApply={(nextValue) => {
+          onChange(nextValue);
+          setOpen(false);
+        }}
+      />
+    </div>
+  );
+}
+
+function DateTimePopover({ value, isOpen, onApply, onCancel }) {
+  const [draft, setDraft] = useState(() => parseDemoDate(value) ?? new Date(2026, 3, 29, 15, 0));
+  const year = draft.getFullYear();
+  const month = draft.getMonth();
+  const calendarDays = getCalendarDays(year, month);
+  const selectedDateKey = toDateKey(draft);
+  const displayHour = draft.getHours() % 12 || 12;
+  const amPm = draft.getHours() >= 12 ? 'PM' : 'AM';
+
+  useEffect(() => {
+    if (isOpen) setDraft(parseDemoDate(value) ?? new Date());
+  }, [isOpen, value]);
+
+  const updateDraftTime = ({ hour = displayHour, minute = draft.getMinutes(), period = amPm }) => {
+    const next = new Date(draft);
+    const normalizedHour = period === 'PM' ? (Number(hour) % 12) + 12 : Number(hour) % 12;
+    next.setHours(normalizedHour, Number(minute), 0, 0);
+    setDraft(next);
+  };
+
+  const shiftMonth = (offset) => {
+    const next = new Date(draft);
+    next.setMonth(next.getMonth() + offset);
+    setDraft(next);
+  };
+
+  return (
+    <div className={`datetime-popover ${isOpen ? 'is-open' : ''}`} aria-hidden={!isOpen}>
+      <div className="datetime-popover__top">
+        <button type="button" onClick={() => shiftMonth(-1)}>‹‹</button>
+        <strong>{monthLabels[month]} {year}</strong>
+        <button type="button" onClick={() => shiftMonth(1)}>››</button>
+        <span>{formatDemoDate(draft)}</span>
+      </div>
+      <div className="datetime-popover__body">
+        <div className="calendar-picker">
+          {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => <b key={day}>{day}</b>)}
+          {calendarDays.map((day) => (
+            <button
+              type="button"
+              key={`${day.date.toISOString()}-${day.inMonth}`}
+              className={`${!day.inMonth ? 'is-dim' : ''} ${selectedDateKey === toDateKey(day.date) ? 'is-selected' : ''}`}
+              onClick={() => {
+                const next = new Date(draft);
+                next.setFullYear(day.date.getFullYear(), day.date.getMonth(), day.date.getDate());
+                setDraft(next);
+              }}
+            >
+              {day.date.getDate()}
+            </button>
+          ))}
+        </div>
+        <div className="time-picker-list">
+          {timeHours.map((hour) => (
+            <button type="button" key={hour} className={Number(hour) === displayHour ? 'is-selected' : ''} onClick={() => updateDraftTime({ hour })}>{hour}</button>
+          ))}
+        </div>
+        <div className="time-picker-list">
+          {timeMinutes.map((minute) => (
+            <button type="button" key={minute} className={Number(minute) === draft.getMinutes() ? 'is-selected' : ''} onClick={() => updateDraftTime({ minute })}>{minute}</button>
+          ))}
+        </div>
+        <div className="time-picker-list time-picker-list--period">
+          {['AM', 'PM'].map((period) => (
+            <button type="button" key={period} className={period === amPm ? 'is-selected' : ''} onClick={() => updateDraftTime({ period })}>{period}</button>
+          ))}
+        </div>
+      </div>
+      <div className="datetime-popover__actions">
+        <button type="button" onClick={() => setDraft(new Date())}>Now</button>
+        <button type="button" onClick={onCancel}>Cancel</button>
+        <button type="button" className="is-primary" onClick={() => onApply(formatDemoDate(draft))}>OK</button>
+      </div>
+    </div>
+  );
+}
+
+function TimePopover({ value, isOpen, onApply, onCancel }) {
+  const [draft, setDraft] = useState(() => parseDemoTime(value));
+
+  // Reset the draft each time the overlay opens, so Cancel always discards temporary picker changes.
+  // 每次打开浮层时重置草稿值，确保 Cancel 会丢弃临时选择。
+  useEffect(() => {
+    if (isOpen) setDraft(parseDemoTime(value));
+  }, [isOpen, value]);
+
+  const applyNow = () => setDraft(parseDemoTime(formatDemoTime(new Date())));
+
+  return (
+    <div className={`time-popover ${isOpen ? 'is-open' : ''}`} aria-hidden={!isOpen}>
+      <div className="time-popover__body">
+        <div className="time-picker-list">
+          {timeHours.map((hour) => (
+            <button type="button" key={hour} className={draft.hour === hour ? 'is-selected' : ''} onClick={() => setDraft((current) => ({ ...current, hour }))}>{hour}</button>
+          ))}
+        </div>
+        <div className="time-picker-list">
+          {timeMinutes.map((minute) => (
+            <button type="button" key={minute} className={draft.minute === minute ? 'is-selected' : ''} onClick={() => setDraft((current) => ({ ...current, minute }))}>{minute}</button>
+          ))}
+        </div>
+        <div className="time-picker-list time-picker-list--period">
+          {['AM', 'PM'].map((period) => (
+            <button type="button" key={period} className={draft.period === period ? 'is-selected' : ''} onClick={() => setDraft((current) => ({ ...current, period }))}>{period}</button>
+          ))}
+        </div>
+      </div>
+      <div className="datetime-popover__actions">
+        <button type="button" onClick={applyNow}>Now</button>
+        <button type="button" onClick={onCancel}>Cancel</button>
+        <button type="button" className="is-primary" onClick={() => onApply(`${draft.hour}:${draft.minute} ${draft.period}`)}>OK</button>
+      </div>
+    </div>
   );
 }
 
@@ -470,6 +706,17 @@ function SwitchRow({ label, checked, onChange, alignEnd = false }) {
       <span>{t(label)}</span>
       <input className="sr-only" type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
       <span className={`switch ${checked ? 'is-on' : ''}`} />
+    </label>
+  );
+}
+
+function RadioOption({ name, label, checked, onChange }) {
+  const { t } = useI18n();
+  return (
+    <label className="radio-option">
+      <input className="sr-only" type="radio" name={name} checked={checked} onChange={onChange} />
+      <span className={`radio-indicator ${checked ? 'is-checked' : ''}`} />
+      <span>{t(label)}</span>
     </label>
   );
 }
@@ -526,6 +773,121 @@ function MiniTable({ headers, children, selectable = true, onToggleAll }) {
   );
 }
 
+function UnitTreeRows({ unitsList, selectedUnitIds, setSelectedUnitIds, expandedTreeIds, toggleTreeNode }) {
+  const { t } = useI18n();
+  const grouped = useMemo(() => groupUnitsForTree(unitsList), [unitsList]);
+
+  // Unit picker is hierarchical: parent rows select descendants and child rows can be expanded independently.
+  // Unit 选择器是层级树：父级行可选择子级，子级也可以独立展开/折叠。
+  const toggleUnit = (unitId) => {
+    setSelectedUnitIds((current) => current.includes(unitId) ? current.filter((id) => id !== unitId) : [...current, unitId]);
+  };
+
+  const toggleUnitSet = (unitIds) => {
+    setSelectedUnitIds((current) => {
+      const allSelected = unitIds.every((id) => current.includes(id));
+      return allSelected ? current.filter((id) => !unitIds.includes(id)) : [...new Set([...current, ...unitIds])];
+    });
+  };
+
+  return grouped.flatMap((building) => {
+    const buildingId = `building-${building.name}`;
+    const buildingExpanded = expandedTreeIds.includes(buildingId);
+    const buildingUnitIds = building.floors.flatMap((floor) => floor.units.map((unit) => unit.id));
+    const rows = [
+      <TreeRow
+        key={buildingId}
+        level={0}
+        label={building.name}
+        expandable
+        expanded={buildingExpanded}
+        checked={buildingUnitIds.length > 0 && buildingUnitIds.every((id) => selectedUnitIds.includes(id))}
+        onExpand={() => toggleTreeNode(buildingId)}
+        onCheck={() => toggleUnitSet(buildingUnitIds)}
+      />,
+    ];
+
+    if (!buildingExpanded) return rows;
+
+    building.floors.forEach((floor) => {
+      const floorId = `floor-${building.name}-${floor.name}`;
+      const floorExpanded = expandedTreeIds.includes(floorId);
+      const floorUnitIds = floor.units.map((unit) => unit.id);
+      rows.push(
+        <TreeRow
+          key={floorId}
+          level={1}
+          label={floor.name}
+          expandable
+          expanded={floorExpanded}
+          checked={floorUnitIds.length > 0 && floorUnitIds.every((id) => selectedUnitIds.includes(id))}
+          onExpand={() => toggleTreeNode(floorId)}
+          onCheck={() => toggleUnitSet(floorUnitIds)}
+        />,
+      );
+
+      if (!floorExpanded) return;
+
+      floor.units.forEach((unit) => {
+        const unitId = `unit-${unit.id}`;
+        const linkedDevices = devices.filter((device) => device.unitId === unit.id);
+        const unitExpanded = expandedTreeIds.includes(unitId);
+        rows.push(
+          <TreeRow
+            key={unitId}
+            level={2}
+            label={unit.name}
+            status={unit.occupied ? t('Occupied') : t('Vacant')}
+            expandable={linkedDevices.length > 0}
+            expanded={unitExpanded}
+            checked={selectedUnitIds.includes(unit.id)}
+            onExpand={() => toggleTreeNode(unitId)}
+            onCheck={() => toggleUnit(unit.id)}
+          />,
+        );
+
+        if (!unitExpanded) return;
+
+        linkedDevices.forEach((device) => {
+          rows.push(
+            <TreeRow
+              key={`device-${device.id}`}
+              level={3}
+              label={device.name}
+              checked={selectedUnitIds.includes(unit.id)}
+              onCheck={() => toggleUnit(unit.id)}
+            />,
+          );
+        });
+      });
+    });
+
+    return rows;
+  });
+}
+
+function TreeRow({ level, label, status = '', expandable = false, expanded = false, checked = false, onExpand, onCheck }) {
+  const { t } = useI18n();
+  // One tree row can represent building, floor, unit or device; level controls indentation only.
+  // 同一个树行组件可表示楼栋、楼层、Unit 或 Device；level 只控制缩进。
+  return (
+    <tr className={`tree-row tree-row--level-${level} ${checked ? 'is-selected' : ''}`}>
+      <td data-label={t('Select')}><input type="checkbox" checked={checked} onChange={onCheck} /></td>
+      <td data-label={t('Units')}>
+        <span className="tree-cell" style={{ '--tree-indent': `${level * 18}px` }}>
+          {expandable ? (
+            <button type="button" className="tree-toggle" onClick={onExpand}>{expanded ? '−' : '+'}</button>
+          ) : (
+            <span className="tree-toggle tree-toggle--empty" />
+          )}
+          <span>{label}</span>
+        </span>
+      </td>
+      <td data-label={t('Status')}>{status}</td>
+    </tr>
+  );
+}
+
 function ChipStack({ items, getLabel, onRemove, maxCollapsed = 3 }) {
   // Collapse long unit/device lists to protect table width; expanded rows can pass a larger maxCollapsed value.
   // 长 Unit/Device 列表默认折叠，避免撑破表格；展开行可传入更大的 maxCollapsed。
@@ -542,4 +904,84 @@ function ChipStack({ items, getLabel, onRemove, maxCollapsed = 3 }) {
       {hiddenCount > 0 && <span className="chip chip--muted">+{hiddenCount}</span>}
     </div>
   );
+}
+
+function groupUnitsForTree(unitsList) {
+  // Group flat mock units into Building > Floor > Units for the Move-In selector.
+  // 将扁平 mock Unit 数据整理为 Building > Floor > Units，供 Move-In 选择器渲染。
+  const buildings = new Map();
+  unitsList.forEach((unit) => {
+    if (!buildings.has(unit.building)) buildings.set(unit.building, new Map());
+    const floors = buildings.get(unit.building);
+    if (!floors.has(unit.floor)) floors.set(unit.floor, []);
+    floors.get(unit.floor).push(unit);
+  });
+
+  return Array.from(buildings, ([name, floors]) => ({
+    name,
+    floors: Array.from(floors, ([floorName, floorUnits]) => ({ name: floorName, units: floorUnits })),
+  }));
+}
+
+function useOutsideDismiss(ref, enabled, onDismiss) {
+  // Shared outside-click listener for floating controls that are visually above their parent panels.
+  // 浮层控件共用的外部点击监听，用于让下拉/日期时间选择器在父容器上层正确收起。
+  useEffect(() => {
+    if (!enabled || typeof document === 'undefined') return undefined;
+
+    const handlePointerDown = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) onDismiss();
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [enabled, onDismiss, ref]);
+}
+
+function parseDemoDate(value) {
+  if (!value) return null;
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2}):(\d{2})\s+(AM|PM)$/);
+  if (!match) return null;
+  const [, year, month, day, hour, minute, period] = match;
+  const normalizedHour = period === 'PM' ? (Number(hour) % 12) + 12 : Number(hour) % 12;
+  return new Date(Number(year), Number(month) - 1, Number(day), normalizedHour, Number(minute), 0, 0);
+}
+
+function parseDemoTime(value) {
+  const match = value?.match(/^(\d{1,2}):(\d{2})\s+(AM|PM)$/);
+  if (!match) return { hour: '12', minute: '00', period: 'AM' };
+  const [, hour, minute, period] = match;
+  return { hour: String(Number(hour)).padStart(2, '0'), minute, period };
+}
+
+function formatDemoDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hour = date.getHours() % 12 || 12;
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  const period = date.getHours() >= 12 ? 'PM' : 'AM';
+  return `${year}-${month}-${day} ${String(hour).padStart(2, '0')}:${minute} ${period}`;
+}
+
+function formatDemoTime(date) {
+  const hour = date.getHours() % 12 || 12;
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  const period = date.getHours() >= 12 ? 'PM' : 'AM';
+  return `${String(hour).padStart(2, '0')}:${minute} ${period}`;
+}
+
+function getCalendarDays(year, month) {
+  const start = new Date(year, month, 1);
+  const gridStart = new Date(start);
+  gridStart.setDate(start.getDate() - start.getDay());
+  return Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(gridStart);
+    date.setDate(gridStart.getDate() + index);
+    return { date, inMonth: date.getMonth() === month };
+  });
+}
+
+function toDateKey(date) {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 }

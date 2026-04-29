@@ -763,7 +763,16 @@
   gap: 10px;
 }
 
-.move-panel,
+.move-panel {
+  /* Floating controls inside Move-In must escape the card boundary. */
+  /* Move-In 内部的浮层控件需要突破卡片边界显示。 */
+  position: relative;
+  background: #fff;
+  min-width: 0;
+  min-height: 0;
+  overflow: visible;
+}
+
 .grant-card {
   background: #fff;
   min-width: 0;
@@ -816,7 +825,7 @@
   padding: 18px 28px 20px;
 }
 
-.move-panel button {
+.move-panel--compact .move-panel__body > button {
   display: block;
   width: 100%;
   min-height: 40px;
@@ -827,11 +836,11 @@
   font-weight: 700;
 }
 
-.move-panel button span {
+.move-panel--compact .move-panel__body > button span {
   float: right;
 }
 
-.move-panel button.is-active {
+.move-panel--compact .move-panel__body > button.is-active {
   background: var(--color-brand);
   color: #fff;
 }
@@ -844,6 +853,189 @@
   width: 100%;
 }
 
+.datetime-field,
+.time-field {
+  position: relative;
+}
+
+.datetime-field.is-layer-open,
+.time-field.is-layer-open {
+  z-index: 90;
+}
+
+.datetime-field > button,
+.time-field > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid #bdbdbd;
+  background: #fff;
+  color: #222;
+  text-align: left;
+}
+
+.datetime-field > button.is-open,
+.time-field > button.is-open {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 1px rgba(140, 198, 83, 0.16);
+}
+
+.datetime-field > button:disabled {
+  color: #999;
+  background: #f7f7f7;
+  cursor: not-allowed;
+}
+
+.datetime-popover,
+.time-popover {
+  /* Shared overlay animation for date-time and time-only pickers. */
+  /* 日期时间与纯时间选择器共用的浮层动效。 */
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 120;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.16);
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transform: translateY(-6px) scale(0.98);
+  transform-origin: top left;
+  transition: opacity 160ms ease, transform 160ms ease, visibility 0s linear 160ms;
+}
+
+.datetime-popover {
+  width: min(520px, calc(100vw - 48px));
+}
+
+.time-popover {
+  width: 214px;
+}
+
+.datetime-popover.is-open,
+.time-popover.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  transition-delay: 0s;
+}
+
+.datetime-popover__top {
+  display: grid;
+  grid-template-columns: 34px 1fr 34px minmax(170px, auto);
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.datetime-popover__top button,
+.datetime-popover__actions button,
+.calendar-picker button,
+.time-picker-list button {
+  border: 0;
+  background: transparent;
+  color: #555;
+}
+
+.datetime-popover__top strong {
+  text-align: center;
+}
+
+.datetime-popover__top span {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.datetime-popover__body {
+  display: grid;
+  grid-template-columns: minmax(230px, 1fr) 52px 52px 64px;
+  align-items: start;
+}
+
+.time-popover__body {
+  display: grid;
+  grid-template-columns: 62px 62px 78px;
+}
+
+.calendar-picker {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+  padding: 12px;
+  border-right: 1px solid #f0f0f0;
+}
+
+.calendar-picker b,
+.calendar-picker button {
+  display: grid;
+  place-items: center;
+  min-height: 28px;
+  font-size: 13px;
+}
+
+.calendar-picker button:hover,
+.time-picker-list button:hover,
+.custom-select__menu button:hover {
+  background: #f3f3f3;
+}
+
+.calendar-picker button.is-dim {
+  color: #c5c5c5;
+}
+
+.calendar-picker button.is-selected,
+.time-picker-list button.is-selected {
+  background: var(--color-brand);
+  color: #fff;
+}
+
+.time-picker-list {
+  max-height: 246px;
+  overflow: auto;
+  border-right: 1px solid #f0f0f0;
+}
+
+.time-picker-list button {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  padding: 0;
+  text-align: center;
+}
+
+.time-picker-list--period {
+  border-right: 0;
+}
+
+.datetime-popover__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.datetime-popover__actions button:first-child {
+  margin-right: auto;
+  color: var(--color-brand);
+}
+
+.datetime-popover__actions button.is-primary {
+  min-width: 42px;
+  min-height: 28px;
+  background: var(--color-brand);
+  color: #fff;
+}
+
 .switch-row,
 .permission-row {
   display: flex;
@@ -852,6 +1044,130 @@
   gap: 10px;
   margin: 12px 0;
   min-width: 0;
+}
+
+.custom-select-row {
+  overflow: visible;
+}
+
+.custom-select {
+  position: relative;
+  flex: 0 0 154px;
+  min-width: 0;
+  z-index: 1;
+}
+
+.custom-select--access {
+  flex: 0 1 150px;
+}
+
+.custom-select:has(> button.is-open) {
+  z-index: 110;
+}
+
+.custom-select > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 30px;
+  padding: 0 8px;
+  border: 1px solid #bdbdbd;
+  background: #fff;
+  color: #222;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.custom-select > button.is-open {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 1px rgba(140, 198, 83, 0.16);
+}
+
+.custom-select__menu {
+  /* Permission dropdowns stay mounted so closing can animate and outside-click cleanup stays predictable. */
+  /* 权限下拉保持挂载状态，便于播放收起动效，也让外部点击关闭逻辑更稳定。 */
+  position: absolute;
+  top: calc(100% + 1px);
+  right: 0;
+  z-index: 120;
+  min-width: 140px;
+  padding: 4px 0;
+  background: #fff;
+  border: 1px solid #e3e3e3;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transform: translateY(-6px) scale(0.98);
+  transform-origin: top right;
+  transition: opacity 150ms ease, transform 150ms ease, visibility 0s linear 150ms;
+}
+
+.custom-select__menu.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  transition-delay: 0s;
+}
+
+.custom-select__menu button {
+  display: block;
+  width: 100%;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  background: #fff;
+  color: #333;
+  text-align: left;
+  font-weight: 700;
+}
+
+.custom-select__menu button.is-selected {
+  background: #f3faec;
+}
+
+.move-in-page input[type='checkbox'] {
+  accent-color: var(--color-brand);
+}
+
+.radio-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.radio-indicator {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #a8a8a8;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.radio-indicator::after {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-brand);
+  content: '';
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.radio-indicator.is-checked {
+  border-color: var(--color-brand);
+}
+
+.radio-indicator.is-checked::after {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .switch-row--end {
@@ -887,6 +1203,10 @@
   min-height: 30px;
   border: 1px solid #c9c9c9;
   padding: 0 8px;
+}
+
+.access-row__controls .custom-select {
+  max-width: 100%;
 }
 
 .schedule-days,
@@ -1061,13 +1381,42 @@
 }
 
 .mini-table tr.is-selected,
-.mini-table tbody tr.is-selected:nth-child(even) {
+.mini-table tbody tr.is-selected:nth-child(even),
+.mini-table tbody tr:hover {
   background: #f3faec;
 }
 
 .tree-row {
   color: #555;
   font-weight: 700;
+}
+
+.tree-row--level-2,
+.tree-row--level-3 {
+  font-weight: 400;
+}
+
+.tree-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: var(--tree-indent);
+}
+
+.tree-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #e3e3e3;
+  background: #fff;
+  color: #333;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.tree-toggle--empty {
+  border-color: transparent;
 }
 
 /* Assignment chips summarize generated unit/device access and allow quick removal before confirmation. */
@@ -1706,7 +2055,8 @@
 
   .access-row__controls select,
   .access-row__controls input,
-  .permission-row select {
+  .permission-row select,
+  .custom-select {
     width: 100%;
     flex-basis: auto;
   }
