@@ -24,7 +24,8 @@ export function V1Shell({ children, menuIcon }) {
   const location = useLocation();
   const navigate = useNavigate();
   const setPropertyId = useDemoStore((state) => state.setPropertyId);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const isSidebarCollapsed = useDemoStore((state) => state.isSidebarCollapsed);
+  const toggleSidebarCollapsed = useDemoStore((state) => state.toggleSidebarCollapsed);
   const [isPropertyOverlayOpen, setIsPropertyOverlayOpen] = useState(false);
   const [isModuleMenuOpen, setIsModuleMenuOpen] = useState(false);
 
@@ -77,7 +78,7 @@ export function V1Shell({ children, menuIcon }) {
         className="property-sidebar__collapse"
         type="button"
         aria-label={t(isSidebarCollapsed ? 'Expand property sidebar' : 'Collapse property sidebar')}
-        onClick={() => setIsSidebarCollapsed((value) => !value)}
+        onClick={toggleSidebarCollapsed}
       >
         {isSidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
         <span>{t(isSidebarCollapsed ? 'Expand' : 'Collapse')}</span>
@@ -147,7 +148,7 @@ export function V1Shell({ children, menuIcon }) {
         className="desktop-sidebar-edge"
         type="button"
         aria-label={t(isSidebarCollapsed ? 'Expand property sidebar' : 'Collapse property sidebar')}
-        onClick={() => setIsSidebarCollapsed((value) => !value)}
+        onClick={toggleSidebarCollapsed}
       >
         {isSidebarCollapsed ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}
       </button>
