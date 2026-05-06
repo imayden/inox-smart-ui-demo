@@ -95,6 +95,7 @@ export function MoveInPage() {
   const [unitSearch, setUnitSearch] = useState('');
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [selectedUnitIds, setSelectedUnitIds] = useState([]);
+  const [assignmentGroups, setAssignmentGroups] = useState([]);
   const [expandedSummaryUsers, setExpandedSummaryUsers] = useState([]);
   const [expandedTreeIds, setExpandedTreeIds] = useState(['building-Main Building', 'floor-Main Building-1st Floor', 'unit-u-6']);
   const [submitted, setSubmitted] = useState(false);
@@ -118,30 +119,15 @@ export function MoveInPage() {
   const selectedUsers = useMemo(() => users.filter((user) => selectedUserIds.includes(user.id)), [selectedUserIds]);
   const selectedUnits = useMemo(() => units.filter((unit) => selectedUnitIds.includes(unit.id)), [selectedUnitIds]);
 
-  const selectedUnitDevices = useMemo(() => {
-    // Build the unit -> devices map once so the review table and result table share the same assignment source.
-    // 先生成 Unit -> Devices 映射，让右侧复核表和提交结果页使用同一份授权来源。
-    const map = new Map();
-    selectedUnits.forEach((unit) => {
-      const linkedDevices = devices.filter((device) => device.unitId === unit.id);
-      map.set(unit.id, linkedDevices.length ? linkedDevices : [devices[0]]);
-    });
-    return map;
-  }, [selectedUnits]);
+  const canPairSelections = selectedUsers.length > 0 && selectedUnits.length > 0;
 
-  const groupedAssignments = useMemo(() => selectedUsers.map((user) => ({
-    // Each selected user receives the selected units and all devices attached to those units.
-    // 每个被选用户都会获得已选 Unit，以及这些 Unit 关联的全部设备。
-    user,
-    units: selectedUnits,
-    devices: selectedUnits.flatMap((unit) => selectedUnitDevices.get(unit.id) ?? []),
-  })), [selectedUnitDevices, selectedUnits, selectedUsers]);
+  const groupedAssignments = assignmentGroups;
 
   const resultRows = useMemo(() => groupedAssignments.flatMap((group, groupIndex) => (
     // Flatten grouped assignments into transaction rows to mimic the production processing screen.
     // 将用户分组授权压平成交易记录行，用于模拟线上提交后的处理页。
     group.units.flatMap((unit, unitIndex) => {
-      const linkedDevices = selectedUnitDevices.get(unit.id) ?? [];
+      const linkedDevices = getDevicesForUnit(unit);
       return linkedDevices.map((device, deviceIndex) => ({
         id: `${group.user.id}-${unit.id}-${device.id}`,
         transactionId: 33186 - groupIndex * 12 - unitIndex - deviceIndex,
@@ -150,7 +136,7 @@ export function MoveInPage() {
         device,
       }));
     })
-  )), [groupedAssignments, selectedUnitDevices]);
+  )), [groupedAssignments]);
 
   const selectRole = (nextRole) => {
     // Role selection changes the default permission set, mirroring the production form behavior.
@@ -184,12 +170,37 @@ export function MoveInPage() {
   };
 
   const removeUnit = (unitId) => {
-    setSelectedUnitIds((current) => current.filter((id) => id !== unitId));
+    // Removing a unit affects the review area, not the temporary selector state.
+    // 删除 Unit 作用于右侧复核区，不影响当前临时选择状态。
+    setAssignmentGroups((current) => current
+      .map((group) => ({
+        ...group,
+        units: group.units.filter((unit) => unit.id !== unitId),
+        devices: group.devices.filter((device) => device.unitId !== unitId),
+      }))
+      .filter((group) => group.units.length > 0));
   };
 
   const removeUser = (userId) => {
-    setSelectedUserIds((current) => current.filter((id) => id !== userId));
+    setAssignmentGroups((current) => current.filter((group) => group.user.id !== userId));
     setExpandedSummaryUsers((current) => current.filter((id) => id !== userId));
+  };
+
+  const clearAssignments = () => {
+    setAssignmentGroups([]);
+    setSelectedUserIds([]);
+    setSelectedUnitIds([]);
+    setExpandedSummaryUsers([]);
+  };
+
+  const pairSelections = () => {
+    if (!canPairSelections) return;
+
+    // Pair is an explicit staging action: selected users + selected units move to review, then selectors reset.
+    // Pair 是显式暂存动作：把已选用户和 Unit 加入右侧复核区，然后清空左右选择器以便继续添加。
+    setAssignmentGroups((current) => mergeAssignmentGroups(current, selectedUsers, selectedUnits));
+    setSelectedUserIds([]);
+    setSelectedUnitIds([]);
   };
 
   const handleConfirm = () => {
@@ -371,7 +382,7 @@ export function MoveInPage() {
           onToggle={setShowInactiveOnly}
           search={userSearch}
           setSearch={setUserSearch}
-          canContinue={selectedUserIds.length > 0}
+          showAction={false}
         >
           <MiniTable headers={['User', 'Email Address']} onToggleAll={toggleAllUsers}>
             {filteredUsers.map((user) => (
@@ -393,7 +404,9 @@ export function MoveInPage() {
           onExtraToggle={setShowPublicUnits}
           search={unitSearch}
           setSearch={setUnitSearch}
-          canContinue={selectedUnitIds.length > 0}
+          actionLabel="Pair"
+          canAction={canPairSelections}
+          onAction={pairSelections}
         >
           <MiniTable headers={['Units', 'Status']} onToggleAll={toggleAllUnits}>
             <UnitTreeRows
@@ -408,7 +421,7 @@ export function MoveInPage() {
 
         <section className="selector-panel selected-assignment">
           <div className="selector-actions">
-            <Button variant="muted" onClick={() => { setSelectedUserIds([]); setSelectedUnitIds([]); setExpandedSummaryUsers([]); }}>{t('Clear All')}</Button>
+            <Button variant="muted" onClick={clearAssignments}>{t('Clear All')}</Button>
           </div>
           <MiniTable headers={['User', 'Units', 'Devices']} selectable={false}>
             {groupedAssignments.map((group) => {
@@ -734,7 +747,21 @@ function AccessRow({ label, checked, onChange, children }) {
   );
 }
 
-function SelectorPanel({ title, checked, onToggle, extraLabel, extraChecked, onExtraToggle, search, setSearch, canContinue, children }) {
+export function SelectorPanel({
+  title,
+  checked,
+  onToggle,
+  extraLabel,
+  extraChecked,
+  onExtraToggle,
+  search,
+  setSearch,
+  actionLabel = 'Next',
+  canAction = false,
+  onAction,
+  showAction = true,
+  children,
+}) {
   const { t } = useI18n();
   // Shared picker shell for Users and Units; actions stay local while table content is injected.
   // 用户与 Unit 选择器共用外壳；搜索/开关在外层，表格内容由 children 注入。
@@ -745,10 +772,10 @@ function SelectorPanel({ title, checked, onToggle, extraLabel, extraChecked, onE
           <SwitchRow label={title} checked={checked} onChange={onToggle} />
           {extraLabel && <SwitchRow label={extraLabel} checked={extraChecked} onChange={onExtraToggle} />}
         </div>
-        <div className="selector-search">
+        <div className={`selector-search ${!showAction ? 'selector-search--no-action' : ''}`}>
           <input value={search} placeholder={t('Search here...')} onChange={(event) => setSearch(event.target.value)} />
           <button className="selector-search__icon" type="button" aria-label={t('Search')}><Search size={16} /></button>
-          <Button variant="muted" disabled={!canContinue}>{t('Next')}</Button>
+          {showAction && <Button onClick={onAction} disabled={!canAction}>{t(actionLabel)}</Button>}
         </div>
       </div>
       {children}
@@ -756,7 +783,7 @@ function SelectorPanel({ title, checked, onToggle, extraLabel, extraChecked, onE
   );
 }
 
-function MiniTable({ headers, children, selectable = true, onToggleAll }) {
+export function MiniTable({ headers, children, selectable = true, onToggleAll }) {
   const { t } = useI18n();
   return (
     <div className="table-wrap">
@@ -773,7 +800,7 @@ function MiniTable({ headers, children, selectable = true, onToggleAll }) {
   );
 }
 
-function UnitTreeRows({ unitsList, selectedUnitIds, setSelectedUnitIds, expandedTreeIds, toggleTreeNode }) {
+export function UnitTreeRows({ unitsList, selectedUnitIds, setSelectedUnitIds, expandedTreeIds, toggleTreeNode }) {
   const { t } = useI18n();
   const grouped = useMemo(() => groupUnitsForTree(unitsList), [unitsList]);
 
@@ -888,7 +915,7 @@ function TreeRow({ level, label, status = '', expandable = false, expanded = fal
   );
 }
 
-function ChipStack({ items, getLabel, onRemove, maxCollapsed = 3 }) {
+export function ChipStack({ items, getLabel, onRemove, maxCollapsed = 3 }) {
   // Collapse long unit/device lists to protect table width; expanded rows can pass a larger maxCollapsed value.
   // 长 Unit/Device 列表默认折叠，避免撑破表格；展开行可传入更大的 maxCollapsed。
   const visibleItems = items.slice(0, maxCollapsed);
@@ -921,6 +948,40 @@ function groupUnitsForTree(unitsList) {
     name,
     floors: Array.from(floors, ([floorName, floorUnits]) => ({ name: floorName, units: floorUnits })),
   }));
+}
+
+function getDevicesForUnit(unit) {
+  const linkedDevices = devices.filter((device) => device.unitId === unit.id);
+  return linkedDevices.length ? linkedDevices : [devices[0]];
+}
+
+function mergeAssignmentGroups(currentGroups, usersToPair, unitsToPair) {
+  // Merge by user ID and dedupe unit/device IDs so repeated Pair clicks do not create duplicate chips.
+  // 按 User ID 合并，并对 Unit/Device 去重，避免重复点击 Pair 生成重复标签。
+  const nextGroups = currentGroups.map((group) => ({
+    ...group,
+    units: [...group.units],
+    devices: [...group.devices],
+  }));
+
+  usersToPair.forEach((user) => {
+    const devicesToPair = unitsToPair.flatMap(getDevicesForUnit);
+    const existing = nextGroups.find((group) => group.user.id === user.id);
+
+    if (!existing) {
+      nextGroups.push({ user, units: [...unitsToPair], devices: dedupeById(devicesToPair) });
+      return;
+    }
+
+    existing.units = dedupeById([...existing.units, ...unitsToPair]);
+    existing.devices = dedupeById([...existing.devices, ...devicesToPair]);
+  });
+
+  return nextGroups;
+}
+
+function dedupeById(items) {
+  return Array.from(new Map(items.map((item) => [item.id, item])).values());
 }
 
 function useOutsideDismiss(ref, enabled, onDismiss) {

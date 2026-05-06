@@ -311,7 +311,16 @@
   margin-left: var(--active-sidebar-width);
   min-height: calc(100vh - var(--topbar-height) - var(--demo-bar-height));
   padding: 38px var(--content-pad);
+  background: #fff;
   transition: margin-left 0.2s ease, padding 0.2s ease;
+}
+
+.main-content:has(.dashboard-page),
+.main-content:has(.properties-page),
+.main-content:has(.calendar-page) {
+  /* Only the high-level overview pages keep the legacy light-gray canvas. */
+  /* 仅 Dashboard / Properties / Calendar 这类一级总览页保留旧版浅灰画布。 */
+  background: var(--color-app-bg);
 }
 
 .product-shell.is-sidebar-collapsed .main-content {

@@ -4,6 +4,7 @@ import { Button } from '../components/ui.jsx';
 import { devices, units, users } from '../domain/mockData.js';
 import { useDemoStore } from '../demo/demoStore.js';
 import { useI18n } from '../i18n/useI18n.js';
+import { ChipStack, MiniTable, SelectorPanel, UnitTreeRows } from './MoveInPage.jsx';
 
 const credentialTabs = [
   { id: 'passcode', label: 'Passcodes' },
@@ -28,6 +29,15 @@ export function GrantAccessPage() {
   const [permanent, setPermanent] = useState(true);
   const [recurringSchedule, setRecurringSchedule] = useState(false);
   const [selectedDays, setSelectedDays] = useState([]);
+  const [showInactiveOnly, setShowInactiveOnly] = useState(false);
+  const [showVacantOnly, setShowVacantOnly] = useState(false);
+  const [showPublicUnits, setShowPublicUnits] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
+  const [unitSearch, setUnitSearch] = useState('');
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
+  const [selectedUnitIds, setSelectedUnitIds] = useState([]);
+  const [accessPairs, setAccessPairs] = useState([]);
+  const [expandedTreeIds, setExpandedTreeIds] = useState(['building-Main Building', 'floor-Main Building-1st Floor']);
   const [submitted, setSubmitted] = useState(false);
 
   const selectedUser = users.find((user) => user.id === selectedUserId) ?? users[0];
@@ -42,12 +52,65 @@ export function GrantAccessPage() {
   const selectedDevices = devices.filter((device) => selectedDeviceIds.includes(device.id));
   const accessName = credentialType === 'passcode' ? `${selectedUser.name}@5372` : credentialType === 'rfid' ? 'AppCard0422' : `${selectedUser.name} ${credentialType}`;
 
+  const filteredUsers = useMemo(() => {
+    const keyword = userSearch.trim().toLowerCase();
+    return users.filter((user) => {
+      const haystack = `${user.name} ${user.email}`.toLowerCase();
+      return (!keyword || haystack.includes(keyword)) && (!showInactiveOnly || user.status === 'Inactive');
+    });
+  }, [showInactiveOnly, userSearch]);
+
+  const filteredUnits = useMemo(() => {
+    const keyword = unitSearch.trim().toLowerCase();
+    return units.filter((unit) => {
+      const haystack = `${unit.unitNumber} ${unit.name} ${unit.tag}`.toLowerCase();
+      return (!keyword || haystack.includes(keyword)) && (!showVacantOnly || !unit.occupied) && (showPublicUnits || !unit.publicUnit);
+    });
+  }, [showPublicUnits, showVacantOnly, unitSearch]);
+
+  const selectedUsers = useMemo(() => users.filter((user) => selectedUserIds.includes(user.id)), [selectedUserIds]);
+  const selectedUnits = useMemo(() => units.filter((unit) => selectedUnitIds.includes(unit.id)), [selectedUnitIds]);
+  const canPairSelections = selectedUsers.length > 0 && selectedUnits.length > 0;
+
   const toggleDevice = (deviceId) => {
     setSelectedDeviceIds((current) => current.includes(deviceId) ? current.filter((id) => id !== deviceId) : [...current, deviceId]);
   };
 
   const toggleDay = (day) => {
     setSelectedDays((current) => current.includes(day) ? current.filter((item) => item !== day) : [...current, day]);
+  };
+
+  const toggleValue = (value, list, setter) => {
+    setter(list.includes(value) ? list.filter((item) => item !== value) : [...list, value]);
+  };
+
+  const toggleTreeNode = (nodeId) => {
+    setExpandedTreeIds((current) => current.includes(nodeId) ? current.filter((id) => id !== nodeId) : [...current, nodeId]);
+  };
+
+  const toggleAllUsers = () => {
+    const visibleIds = filteredUsers.map((user) => user.id);
+    const allVisibleSelected = visibleIds.every((id) => selectedUserIds.includes(id));
+    setSelectedUserIds(allVisibleSelected ? selectedUserIds.filter((id) => !visibleIds.includes(id)) : [...new Set([...selectedUserIds, ...visibleIds])]);
+  };
+
+  const toggleAllUnits = () => {
+    const visibleIds = filteredUnits.map((unit) => unit.id);
+    const allVisibleSelected = visibleIds.every((id) => selectedUnitIds.includes(id));
+    setSelectedUnitIds(allVisibleSelected ? selectedUnitIds.filter((id) => !visibleIds.includes(id)) : [...new Set([...selectedUnitIds, ...visibleIds])]);
+  };
+
+  const pairSelections = () => {
+    if (!canPairSelections) return;
+
+    // Grant Access uses the same explicit Pair staging model as Move-In so review rows are intentional.
+    // Grant Access 复用 Move-In 的显式 Pair 暂存模型，确保右侧复核行来自用户主动配对。
+    setAccessPairs((current) => mergeAccessPairs(current, selectedUsers, selectedUnits));
+    setSelectedUserId(selectedUsers[0].id);
+    setSelectedUnitId(selectedUnits[0].id);
+    setSelectedDeviceIds(getDevicesForUnit(selectedUnits[0]).map((device) => device.id));
+    setSelectedUserIds([]);
+    setSelectedUnitIds([]);
   };
 
   const backToAccess = () => navigate(`/demo/${uiVersion}/property/${propertyId}/access`);
@@ -74,21 +137,13 @@ export function GrantAccessPage() {
         {/* Three-card layout mirrors production: user/unit, credential details, then date/schedule rules. */}
         {/* 三卡片布局贴近线上结构：用户/单元、凭证详情、日期与计划规则。 */}
         <section className="grant-card">
-          <h2>{t('User')}</h2>
-          <label className="field"><span>{t('User Email Address')}</span>
-            <select value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
-              {users.map((user) => <option key={user.id} value={user.id}>{user.email}</option>)}
-            </select>
-          </label>
+          <h2>{t('Credential Owner')}</h2>
+          <label className="field"><span>{t('User Email Address')}</span><input value={selectedUser.email} readOnly /></label>
           <div className="form-grid compact-grid">
             <label className="field"><span>{t('First Name')}</span><input value={selectedUser.firstName} readOnly /></label>
             <label className="field"><span>{t('Last Name')}</span><input value={selectedUser.lastName} readOnly /></label>
           </div>
-          <label className="field"><span>{t('Unit')}</span>
-            <select value={selectedUnitId} onChange={(event) => setSelectedUnitId(event.target.value)}>
-              {units.map((unit) => <option key={unit.id} value={unit.id}>{unit.unitNumber}</option>)}
-            </select>
-          </label>
+          <label className="field"><span>{t('Unit')}</span><input value={selectedUnit.unitNumber} readOnly /></label>
         </section>
 
         <section className="grant-card">
@@ -120,6 +175,70 @@ export function GrantAccessPage() {
           </div>
         </section>
       </div>
+
+      <section className="grant-card grant-card--wide grant-pair-section">
+        <div className="grant-card-header">
+          <h2>{t('User + Unit Selection')}</h2>
+          <Button variant="muted" onClick={() => { setAccessPairs([]); setSelectedUserIds([]); setSelectedUnitIds([]); }}>{t('Clear All')}</Button>
+        </div>
+        <div className="move-in-selectors grant-selectors">
+          <SelectorPanel
+            title="Show Inactive Users Only"
+            checked={showInactiveOnly}
+            onToggle={setShowInactiveOnly}
+            search={userSearch}
+            setSearch={setUserSearch}
+            showAction={false}
+          >
+            <MiniTable headers={['User', 'Email Address']} onToggleAll={toggleAllUsers}>
+              {filteredUsers.map((user) => (
+                <tr key={user.id} className={selectedUserIds.includes(user.id) ? 'is-selected' : ''}>
+                  <td data-label={t('Select')}><input type="checkbox" checked={selectedUserIds.includes(user.id)} onChange={() => toggleValue(user.id, selectedUserIds, setSelectedUserIds)} /></td>
+                  <td data-label={t('User')}>{user.name}</td>
+                  <td data-label={t('Email Address')}>{user.email}</td>
+                </tr>
+              ))}
+            </MiniTable>
+          </SelectorPanel>
+
+          <SelectorPanel
+            title="Show Vacant Units Only"
+            checked={showVacantOnly}
+            onToggle={setShowVacantOnly}
+            extraLabel="Show Public Units"
+            extraChecked={showPublicUnits}
+            onExtraToggle={setShowPublicUnits}
+            search={unitSearch}
+            setSearch={setUnitSearch}
+            actionLabel="Pair"
+            canAction={canPairSelections}
+            onAction={pairSelections}
+          >
+            <MiniTable headers={['Units', 'Status']} onToggleAll={toggleAllUnits}>
+              <UnitTreeRows
+                unitsList={filteredUnits}
+                selectedUnitIds={selectedUnitIds}
+                setSelectedUnitIds={setSelectedUnitIds}
+                expandedTreeIds={expandedTreeIds}
+                toggleTreeNode={toggleTreeNode}
+              />
+            </MiniTable>
+          </SelectorPanel>
+
+          <section className="selector-panel selected-assignment">
+            <MiniTable headers={['User', 'Units', 'Devices']} selectable={false}>
+              {accessPairs.map((pair) => (
+                <tr key={pair.user.id}>
+                  <td data-label={t('User')}>{pair.user.name}</td>
+                  <td data-label={t('Units')}><ChipStack items={pair.units} getLabel={(unit) => unit.unitNumber} /></td>
+                  <td data-label={t('Devices')}><ChipStack items={pair.devices} getLabel={(device) => device.name} maxCollapsed={2} /></td>
+                </tr>
+              ))}
+              {!accessPairs.length && <tr><td colSpan="3"><div className="empty-state">{t('No data')}</div></td></tr>}
+            </MiniTable>
+          </section>
+        </div>
+      </section>
 
       <section className="grant-card grant-card--wide">
         {/* Device assignment is separated from credential fields so future API data can be loaded independently. */}
@@ -180,10 +299,38 @@ export function GrantAccessPage() {
 
       <div className="form-footer">
         <Button variant="muted" onClick={backToAccess}>{t('Cancel')}</Button>
-        <Button onClick={() => setSubmitted(true)} disabled={!selectedDevices.length}>{t('Submit')}</Button>
+        <Button onClick={() => setSubmitted(true)} disabled={!selectedDevices.length || !accessPairs.length}>{t('Submit')}</Button>
       </div>
     </section>
   );
+}
+
+function getDevicesForUnit(unit) {
+  const linkedDevices = devices.filter((device) => device.unitId === unit.id);
+  return linkedDevices.length ? linkedDevices : [devices[0]];
+}
+
+function mergeAccessPairs(currentPairs, usersToPair, unitsToPair) {
+  // Pair rows are grouped by user; unit/device chips are deduped for repeated assignments.
+  // Pair 结果按用户分组；重复添加时 Unit/Device 标签会去重。
+  const nextPairs = currentPairs.map((pair) => ({ ...pair, units: [...pair.units], devices: [...pair.devices] }));
+
+  usersToPair.forEach((user) => {
+    const devicesToPair = unitsToPair.flatMap(getDevicesForUnit);
+    const existing = nextPairs.find((pair) => pair.user.id === user.id);
+    if (!existing) {
+      nextPairs.push({ user, units: [...unitsToPair], devices: dedupeById(devicesToPair) });
+      return;
+    }
+    existing.units = dedupeById([...existing.units, ...unitsToPair]);
+    existing.devices = dedupeById([...existing.devices, ...devicesToPair]);
+  });
+
+  return nextPairs;
+}
+
+function dedupeById(items) {
+  return Array.from(new Map(items.map((item) => [item.id, item])).values());
 }
 
 function PasscodeFields() {

@@ -1299,6 +1299,10 @@
   margin: 0;
 }
 
+.selector-search--no-action {
+  grid-template-columns: minmax(0, 1fr) 34px;
+}
+
 .selector-search input {
   min-height: 36px;
   border: 1px solid #c9c9c9;
@@ -1417,11 +1421,14 @@
 .tree-toggle {
   display: inline-grid;
   place-items: center;
+  flex: 0 0 16px;
   width: 16px;
   height: 16px;
+  padding: 0;
   border: 1px solid #e3e3e3;
   background: #fff;
   color: #333;
+  font-size: 13px;
   line-height: 1;
   font-weight: 700;
 }
@@ -1568,6 +1575,14 @@
 
 .grant-card--wide {
   margin-top: 22px;
+}
+
+.grant-pair-section .grant-card-header {
+  margin-bottom: 18px;
+}
+
+.grant-selectors {
+  margin-top: 0;
 }
 
 .grant-card-header {
