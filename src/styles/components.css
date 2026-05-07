@@ -1269,14 +1269,14 @@
 /* 紧凑选择表格复刻线上 Move-In 选择器，同时在窄空间内保持可滚动。 */
 .move-in-selectors {
   display: grid;
-  grid-template-columns: minmax(340px, 1fr) minmax(380px, 1fr) minmax(380px, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
   margin-top: 0;
   align-items: start;
 }
 
 .move-in-selectors .selected-assignment {
-  grid-column: auto;
+  grid-column: 1 / -1;
 }
 
 .selector-header {
@@ -1376,6 +1376,11 @@
   border-right: 0;
 }
 
+.move-in-selectors .selector-panel:nth-child(2) {
+  padding-right: 0;
+  border-right: 0;
+}
+
 .move-in-selectors .table-wrap {
   max-height: 430px;
   overflow: auto;
@@ -1387,7 +1392,34 @@
 }
 
 .move-in-selectors .selected-assignment .mini-table {
-  min-width: 560px;
+  min-width: 920px;
+}
+
+.selected-assignment .table-wrap {
+  max-height: 430px;
+}
+
+.assignment-review-table {
+  table-layout: fixed;
+}
+
+.assignment-review-table th:first-child,
+.assignment-review-table td:first-child {
+  width: 120px;
+}
+
+.assignment-review-table th:nth-child(2),
+.assignment-review-table td:nth-child(2) {
+  width: 46%;
+}
+
+.assignment-review-table th:nth-child(3),
+.assignment-review-table td:nth-child(3) {
+  width: 36%;
+}
+
+.assignment-review-table td {
+  vertical-align: top;
 }
 
 .move-in-selectors .mini-table th:first-child,
@@ -1443,11 +1475,17 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  max-width: min(360px, 100%);
+  max-width: 100%;
+  min-width: 0;
   padding: 3px 8px;
   border: 1px solid #cad8bd;
   background: #f5faef;
   color: #555;
+}
+
+.chip__label {
+  display: block;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1462,6 +1500,7 @@
   background: transparent;
   color: #777;
   cursor: pointer;
+  flex: 0 0 auto;
 }
 
 .chip--muted {
@@ -1474,12 +1513,13 @@
   flex-wrap: wrap;
   gap: 6px;
   min-width: 0;
+  max-width: 100%;
 }
 
 .summary-row-actions {
   display: inline-flex;
   gap: 8px;
-  margin-left: 8px;
+  margin-left: 2px;
   vertical-align: top;
 }
 
@@ -1889,7 +1929,7 @@
   }
 }
 
-@media (max-width: 1500px) {
+@media (max-width: 1800px) {
   .move-in-config {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 18px;
@@ -1905,12 +1945,7 @@
   }
 
   .move-in-selectors {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 18px;
-  }
-
-  .move-in-selectors .selected-assignment {
-    grid-column: 1 / -1;
   }
 
   .move-in-selectors .selector-panel:nth-child(2) {
@@ -1920,6 +1955,12 @@
 
   .move-in-selectors .selector-panel:last-child {
     padding-top: 4px;
+  }
+}
+
+@media (max-width: 1500px) {
+  .move-in-selectors .selected-assignment .mini-table {
+    min-width: 720px;
   }
 }
 

@@ -37,6 +37,7 @@ export function GrantAccessPage() {
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [selectedUnitIds, setSelectedUnitIds] = useState([]);
   const [accessPairs, setAccessPairs] = useState([]);
+  const [expandedPairUsers, setExpandedPairUsers] = useState([]);
   const [expandedTreeIds, setExpandedTreeIds] = useState(['building-Main Building', 'floor-Main Building-1st Floor']);
   const [submitted, setSubmitted] = useState(false);
 
@@ -113,6 +114,37 @@ export function GrantAccessPage() {
     setSelectedUnitIds([]);
   };
 
+  const removeUnitFromPair = (userId, unitId) => {
+    setAccessPairs((current) => current
+      .map((pair) => ({
+        ...pair,
+        units: pair.user.id === userId ? pair.units.filter((unit) => unit.id !== unitId) : pair.units,
+        devices: pair.user.id === userId ? pair.devices.filter((device) => device.unitId !== unitId) : pair.devices,
+      }))
+      .filter((pair) => pair.units.length > 0));
+  };
+
+  const removeDeviceFromPair = (userId, deviceId) => {
+    setAccessPairs((current) => current
+      .map((pair) => {
+        if (pair.user.id !== userId) return pair;
+
+        const removedDevice = pair.devices.find((device) => device.id === deviceId);
+        const devicesAfterRemoval = pair.devices.filter((device) => device.id !== deviceId);
+        const unitsAfterRemoval = removedDevice && !devicesAfterRemoval.some((device) => device.unitId === removedDevice.unitId)
+          ? pair.units.filter((unit) => unit.id !== removedDevice.unitId)
+          : pair.units;
+
+        return { ...pair, units: unitsAfterRemoval, devices: devicesAfterRemoval };
+      })
+      .filter((pair) => pair.units.length > 0));
+  };
+
+  const removePair = (userId) => {
+    setAccessPairs((current) => current.filter((pair) => pair.user.id !== userId));
+    setExpandedPairUsers((current) => current.filter((id) => id !== userId));
+  };
+
   const backToAccess = () => navigate(`/demo/${uiVersion}/property/${propertyId}/access`);
 
   return (
@@ -179,7 +211,7 @@ export function GrantAccessPage() {
       <section className="grant-card grant-card--wide grant-pair-section">
         <div className="grant-card-header">
           <h2>{t('User + Unit Selection')}</h2>
-          <Button variant="muted" onClick={() => { setAccessPairs([]); setSelectedUserIds([]); setSelectedUnitIds([]); }}>{t('Clear All')}</Button>
+          <Button variant="muted" onClick={() => { setAccessPairs([]); setSelectedUserIds([]); setSelectedUnitIds([]); setExpandedPairUsers([]); }}>{t('Clear All')}</Button>
         </div>
         <div className="move-in-selectors grant-selectors">
           <SelectorPanel
@@ -226,12 +258,30 @@ export function GrantAccessPage() {
           </SelectorPanel>
 
           <section className="selector-panel selected-assignment">
-            <MiniTable headers={['User', 'Units', 'Devices']} selectable={false}>
+            <MiniTable className="assignment-review-table" headers={['User', 'Units', 'Devices']} selectable={false}>
               {accessPairs.map((pair) => (
                 <tr key={pair.user.id}>
                   <td data-label={t('User')}>{pair.user.name}</td>
-                  <td data-label={t('Units')}><ChipStack items={pair.units} getLabel={(unit) => unit.unitNumber} /></td>
-                  <td data-label={t('Devices')}><ChipStack items={pair.devices} getLabel={(device) => device.name} maxCollapsed={2} /></td>
+                  <td data-label={t('Units')}>
+                    <ChipStack
+                      items={pair.units}
+                      getLabel={(unit) => unit.unitNumber}
+                      maxCollapsed={expandedPairUsers.includes(pair.user.id) ? 20 : 3}
+                      onRemove={(unit) => removeUnitFromPair(pair.user.id, unit.id)}
+                      onExpandAll={() => toggleValue(pair.user.id, expandedPairUsers, setExpandedPairUsers)}
+                      onRemoveAll={() => removePair(pair.user.id)}
+                    />
+                  </td>
+                  <td data-label={t('Devices')}>
+                    <ChipStack
+                      items={pair.devices}
+                      getLabel={(device) => device.name}
+                      maxCollapsed={expandedPairUsers.includes(pair.user.id) ? 20 : 2}
+                      onRemove={(device) => removeDeviceFromPair(pair.user.id, device.id)}
+                      onExpandAll={() => toggleValue(pair.user.id, expandedPairUsers, setExpandedPairUsers)}
+                      onRemoveAll={() => removePair(pair.user.id)}
+                    />
+                  </td>
                 </tr>
               ))}
               {!accessPairs.length && <tr><td colSpan="3"><div className="empty-state">{t('No data')}</div></td></tr>}

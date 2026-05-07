@@ -169,15 +169,31 @@ export function MoveInPage() {
     setSelectedUnitIds(allVisibleSelected ? selectedUnitIds.filter((id) => !visibleIds.includes(id)) : [...new Set([...selectedUnitIds, ...visibleIds])]);
   };
 
-  const removeUnit = (unitId) => {
-    // Removing a unit affects the review area, not the temporary selector state.
-    // 删除 Unit 作用于右侧复核区，不影响当前临时选择状态。
+  const removeUnitFromUser = (userId, unitId) => {
+    // Removing a unit affects only the matched review row for that user.
+    // 删除 Unit 只影响该用户对应的匹配复核行，不会误删其他用户的匹配结果。
     setAssignmentGroups((current) => current
       .map((group) => ({
         ...group,
-        units: group.units.filter((unit) => unit.id !== unitId),
-        devices: group.devices.filter((device) => device.unitId !== unitId),
+        units: group.user.id === userId ? group.units.filter((unit) => unit.id !== unitId) : group.units,
+        devices: group.user.id === userId ? group.devices.filter((device) => device.unitId !== unitId) : group.devices,
       }))
+      .filter((group) => group.units.length > 0));
+  };
+
+  const removeDeviceFromUser = (userId, deviceId) => {
+    setAssignmentGroups((current) => current
+      .map((group) => {
+        if (group.user.id !== userId) return group;
+
+        const removedDevice = group.devices.find((device) => device.id === deviceId);
+        const devicesAfterRemoval = group.devices.filter((device) => device.id !== deviceId);
+        const unitsAfterRemoval = removedDevice && !devicesAfterRemoval.some((device) => device.unitId === removedDevice.unitId)
+          ? group.units.filter((unit) => unit.id !== removedDevice.unitId)
+          : group.units;
+
+        return { ...group, units: unitsAfterRemoval, devices: devicesAfterRemoval };
+      })
       .filter((group) => group.units.length > 0));
   };
 
@@ -423,23 +439,31 @@ export function MoveInPage() {
           <div className="selector-actions">
             <Button variant="muted" onClick={clearAssignments}>{t('Clear All')}</Button>
           </div>
-          <MiniTable headers={['User', 'Units', 'Devices']} selectable={false}>
+          <MiniTable className="assignment-review-table" headers={['User', 'Units', 'Devices']} selectable={false}>
             {groupedAssignments.map((group) => {
               const expanded = expandedSummaryUsers.includes(group.user.id);
               return (
                 <tr key={group.user.id} className={expanded ? 'is-expanded' : ''}>
                   <td data-label={t('User')}>{group.user.name}</td>
                   <td data-label={t('Units')}>
-                    <ChipStack items={group.units} getLabel={(unit) => unit.unitNumber} onRemove={(unit) => removeUnit(unit.id)} />
+                    <ChipStack
+                      items={group.units}
+                      getLabel={(unit) => unit.unitNumber}
+                      maxCollapsed={expanded ? 20 : 3}
+                      onRemove={(unit) => removeUnitFromUser(group.user.id, unit.id)}
+                      onExpandAll={() => toggleValue(group.user.id, expandedSummaryUsers, setExpandedSummaryUsers)}
+                      onRemoveAll={() => removeUser(group.user.id)}
+                    />
                   </td>
                   <td data-label={t('Devices')}>
-                    <ChipStack items={group.devices} getLabel={(device) => device.name} maxCollapsed={expanded ? 20 : 2} />
-                    <div className="summary-row-actions">
-                      <button type="button" onClick={() => toggleValue(group.user.id, expandedSummaryUsers, setExpandedSummaryUsers)} aria-label={t('Details')}>
-                        {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                      </button>
-                      <button type="button" onClick={() => removeUser(group.user.id)} aria-label={t('Delete')}><Trash2 size={16} /></button>
-                    </div>
+                    <ChipStack
+                      items={group.devices}
+                      getLabel={(device) => device.name}
+                      maxCollapsed={expanded ? 20 : 2}
+                      onRemove={(device) => removeDeviceFromUser(group.user.id, device.id)}
+                      onExpandAll={() => toggleValue(group.user.id, expandedSummaryUsers, setExpandedSummaryUsers)}
+                      onRemoveAll={() => removeUser(group.user.id)}
+                    />
                   </td>
                 </tr>
               );
@@ -783,11 +807,11 @@ export function SelectorPanel({
   );
 }
 
-export function MiniTable({ headers, children, selectable = true, onToggleAll }) {
+export function MiniTable({ headers, children, selectable = true, onToggleAll, className = '' }) {
   const { t } = useI18n();
   return (
     <div className="table-wrap">
-      <table className="mini-table">
+      <table className={`mini-table ${className}`}>
         <thead>
           <tr>
             {selectable && <th><input type="checkbox" onChange={onToggleAll} /></th>}
@@ -915,7 +939,7 @@ function TreeRow({ level, label, status = '', expandable = false, expanded = fal
   );
 }
 
-export function ChipStack({ items, getLabel, onRemove, maxCollapsed = 3 }) {
+export function ChipStack({ items, getLabel, onRemove, onExpandAll, onRemoveAll, maxCollapsed = 3 }) {
   // Collapse long unit/device lists to protect table width; expanded rows can pass a larger maxCollapsed value.
   // 长 Unit/Device 列表默认折叠，避免撑破表格；展开行可传入更大的 maxCollapsed。
   const visibleItems = items.slice(0, maxCollapsed);
@@ -924,11 +948,19 @@ export function ChipStack({ items, getLabel, onRemove, maxCollapsed = 3 }) {
     <div className="chip-stack">
       {visibleItems.map((item) => (
         <span className="chip" key={item.id} title={getLabel(item)}>
-          {getLabel(item)}
+          <span className="chip__label">{getLabel(item)}</span>
           {onRemove && <button type="button" onClick={() => onRemove(item)} aria-label="Remove"><X size={12} /></button>}
         </span>
       ))}
-      {hiddenCount > 0 && <span className="chip chip--muted">+{hiddenCount}</span>}
+      {hiddenCount > 0 && (
+        <>
+          <span className="chip chip--muted">+{hiddenCount}</span>
+          <span className="summary-row-actions">
+            {onExpandAll && <button type="button" onClick={onExpandAll} aria-label="Expand all"><ChevronRight size={16} /></button>}
+            {onRemoveAll && <button type="button" onClick={onRemoveAll} aria-label="Delete all"><Trash2 size={16} /></button>}
+          </span>
+        </>
+      )}
     </div>
   );
 }
