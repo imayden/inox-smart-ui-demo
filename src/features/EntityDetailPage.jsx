@@ -233,11 +233,12 @@ function KeypadConfigurationsCard({ password, isVisible, onPasswordChange, onTog
 
 function PhysicalButtonControlsCard({ disabled, onChange }) {
   const { t } = useI18n();
+  const statusLabel = disabled ? 'Enabled' : 'Disabled';
   return (
     <DeviceSettingCard title="Physical Button Controls" className="device-setting-card--physical-buttons">
       <div className="device-lock-buttons-row">
         <strong>
-          {t('Lock Physical Buttons')}: <span className={`device-lock-buttons-state ${disabled ? 'is-on' : ''}`}>{t('Disabled')}</span>
+          {t('Lock Physical Buttons')}: <span className={`device-lock-buttons-state ${disabled ? 'is-on' : ''}`}>{t(statusLabel)}</span>
         </strong>
         <label className="device-inline-switch" aria-label={t('Lock Physical Buttons')}>
           <input type="checkbox" checked={disabled} onChange={(event) => onChange(event.target.checked)} />

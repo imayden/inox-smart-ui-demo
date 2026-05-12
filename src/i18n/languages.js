@@ -97,6 +97,7 @@ export const uiText = {
   'Edit': { es: 'Editar', zh: '编辑' },
   'Effective': { es: 'Vigente', zh: '有效' },
   'Email Address': { es: 'Correo electrónico', zh: '电子邮箱' },
+  'Enabled': { es: 'Habilitado', zh: '已启用' },
   'End Time': { es: 'Hora de fin', zh: '结束时间' },
   'End Date & Time': { es: 'Fecha y hora de fin', zh: '结束日期与时间' },
   'Expand': { es: 'Expandir', zh: '展开' },
